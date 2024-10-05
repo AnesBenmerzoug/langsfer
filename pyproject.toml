@@ -1,0 +1,73 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "language-transfer"
+dynamic = ["version"]
+description = "Implementations for some methods and algorithms for language transfer"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "LGPL-2.1"
+keywords = ["LLM", "Large Language Model", "Language Transfer"]
+authors = [
+    { name = "Anes Benmerzoug", email = "anes.benmerzoug@gmail.com" },
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = [
+    "transformers",
+]
+
+[project.urls]
+Documentation = "https://github.com/Anes Benmerzoug/language-transfer#readme"
+Issues = "https://github.com/Anes Benmerzoug/language-transfer/issues"
+Source = "https://github.com/Anes Benmerzoug/language-transfer"
+
+[tool.hatch.version]
+path = "src/language_transfer/__about__.py"
+
+
+[tool.hatch.envs.test]
+dependencies = [
+    "pytest",
+    "pytest-cov",
+    "coverage[toml]",
+    "pytest-timeout",
+]
+
+[tool.hatch.envs.dev]
+skip-install = true
+dependencies = [
+    "pre-commit"
+]
+
+[tool.hatch.envs.dev.scripts]
+install = "pre-commit install"
+
+[tool.coverage.run]
+source_pkgs = ["language_transfer", "tests"]
+branch = true
+parallel = true
+omit = [
+    "src/language_transfer/__about__.py",
+]
+
+[tool.coverage.paths]
+language_transfer = ["src/language_transfer", "*/language-transfer/src/language_transfer"]
+tests = ["tests", "*/language-transfer/tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "no cov",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+
