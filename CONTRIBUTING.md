@@ -11,11 +11,11 @@
 - Install [pre-commit](https://pre-commit.com/) hooks
 
   ```shell
-  hatch run dev:install
+  hatch run dev:pre-commit-install
   ```
 
 - Logging to the HuggingFace Hub in order to download some of the required datasets and models:
 
   ```shell
-  huggingface-cli login
+  hatch run dev:huggingface-hub-login
   ```

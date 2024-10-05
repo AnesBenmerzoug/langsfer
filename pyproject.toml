@@ -24,6 +24,8 @@ classifiers = [
 ]
 dependencies = [
     "transformers",
+    "gensim",
+    "numpy",
 ]
 
 [project.urls]
@@ -46,11 +48,13 @@ dependencies = [
 [tool.hatch.envs.dev]
 skip-install = true
 dependencies = [
-    "pre-commit"
+    "pre-commit",
+    "huggingface_hub[cli]"
 ]
 
 [tool.hatch.envs.dev.scripts]
-install = "pre-commit install"
+pre-commit-install = "pre-commit install"
+huggingface-hub-login = ""huggingface-cli login
 
 [tool.coverage.run]
 source_pkgs = ["language_transfer", "tests"]
