@@ -23,7 +23,9 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
+    "torch",
     "transformers",
+    "fastdist",
     "gensim",
     "numpy",
 ]
