@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "language-transfer"
-version = "0.1.0"
+version = "0.0.1-dev0"
 description = ""
 authors = ["Anes Benmerzoug <anes.benmerzoug@gmail.com>"]
 license = "LGPL-2.1-only"
@@ -27,14 +27,43 @@ packages = [
     {include = "language_transfer", from = "src"}
 ]
 
+[tool.bumpversion]
+current_version = "0.0.1-dev0"
+commit = false
+tag = false
+allow_dirty = true
+# https://github.com/callowayproject/bump-my-version?tab=readme-ov-file#add-support-for-pre-release-versions
+parse = """(?x)
+    (?P<major>0|[1-9]\\d*)\\.
+    (?P<minor>0|[1-9]\\d*)\\.
+    (?P<patch>0|[1-9]\\d*)
+    (?:
+        -                             # dash separator for pre-release section
+        (?P<pre_l>[a-zA-Z-]+)         # pre-release label
+        (?P<pre_n>0|[1-9]\\d*)        # pre-release version number
+    )?                                # pre-release section is optional
+"""
+serialize = [
+    "{major}.{minor}.{patch}-{pre_l}{pre_n}",
+    "{major}.{minor}.{patch}",
+]
+files = [
+    { filename = "src/language_transfer/__init__.py", search = '__version__ = "{current_version}"', replace = '__version__ = "{new_version}"' },
+    { filename = "pyproject.toml", search = 'version = "{current_version}"', replace = 'version = "{new_version}"' }
+]
+
+[tool.bumpversion.parts.pre_l]
+values = ["dev", "final"]
+optional_value = "final"
+
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">=3.10,<3.13"
 torch = "^2.0.0"
 transformers = "^4.26.0"
 fastdist = "^1.1.6"
 gensim = "^4.3.0"
-numpy = "^2.0.0"
-scipy = "^1.10"
+numpy = "<2.0.0"
+scipy = "<1.13"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
@@ -43,6 +72,7 @@ pre-commit = "^4.0.1"
 pytest-timeout = "^2.3.1"
 huggingface-hub = {extras = ["cli"], version = "^0.25.2"}
 hypothesis = {extras = ["numpy"], version = "^6.115.0"}
+bump-my-version = "^0.27.0"
 
 [tool.pytest.ini_options]
 addopts = "-vv --cov=language-transfer --cov-report=term-missing --cov-report=xml --durations=10"
