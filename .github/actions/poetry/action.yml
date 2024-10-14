@@ -56,7 +56,6 @@ runs:
   
   - if: steps.cached-venv.outputs.cache-hit != 'true'
     name: Create Virtual Environment
-    shell: bash
     run: |
       echo "Included optional dependency groups ${{ inputs.poetry_included_groups }}" 
       echo "Excluded optional dependency groups ${{ inputs.poetry_excluded_groups }}"
