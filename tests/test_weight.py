@@ -11,7 +11,7 @@ from language_transfer.weight import IdentityWeights, SoftmaxWeights, TopKWeight
     input_scores=numpy_st.arrays(
         dtype=st.one_of(st.just(np.float32), st.just(np.float64)),
         shape=numpy_st.array_shapes(min_dims=2, max_dims=2, min_side=1, max_side=5),
-        fill=st.floats(allow_nan=False, allow_infinity=False),
+        fill=st.floats(allow_nan=False, allow_infinity=False, width=32),
     ),
 )
 def test_identity_weights(input_scores: NDArray):
