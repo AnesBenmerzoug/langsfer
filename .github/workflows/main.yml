@@ -72,7 +72,7 @@ jobs:
       - name: Setup Virtual Environment
         uses: ./.github/actions/poetry
         with:
-          python_version: {{ '${{ env.PYTHON_VERSION }}' }}
+          python_version: ${{ env.PYTHON_VERSION }}
           poetry_included_groups: dev
       
       - name: Bump Version and Build Package
