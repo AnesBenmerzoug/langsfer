@@ -38,7 +38,7 @@ without worrying too much about the package's internals.
 For example, to instantiate the WECHSEL method, you would use:
 
 ```python
-from language_transfer import wechsel
+from language_transfer.high_level import wechsel
 from language_transfer.initialization import WeightedAverageEmbeddingsInitialization
 from language_transfer.embeddings import TransformersEmbeddings, FastTextEmbeddings
 from language_transfer.utils import download_file
@@ -65,12 +65,28 @@ embedding_initializer = wechsel(
 
 To initialize the target embeddings you would then use:
 
-```shell
+```python
 target_embeddings = embedding_initializer.initialize(seed=16, show_progress=True)
 ```
 
 The result is an object of type `TransformersEmbeddings` that contain the initialized
 embeddings in its `embeddings_matrix` field and the target tokenizer in its `tokenizer` field.
+
+We can then replace the source model's embeddings matrix with this newly initialized embeddings matrix:
+
+```python
+from transformers import AutoModel
+
+# Load the source model
+source_model = AutoModel.from_pretrained("roberta-base")
+source_model.copy()
+# Resize its embedding layer
+source_model.resize_token_embeddings(new_num_tokens=len(target_tokenizer.vocabulary))
+# Replace the source embeddings matrix with the target embeddings matrix
+source_model.get_input_embeddings()
+# Save the new model
+source_model.save_pretrained("path/to/target_model")
+```
 
 ## Contributing
 
