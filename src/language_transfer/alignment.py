@@ -42,7 +42,7 @@ class BilingualDictionaryAlignment(AlignmentStrategy):
         source_word_embeddings: Word embeddings of the source language
         target_word_embeddings: Word embeddings of the target language
         bilingual_dictionary: Dictionary mapping words in source language to words in target language
-        bilingual_dictionary_file: path to a bilingual dictionary file
+        bilingual_dictionary_file: Path to a bilingual dictionary file
     """
 
     def __init__(
