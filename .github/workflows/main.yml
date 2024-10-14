@@ -30,6 +30,7 @@ defaults:
 
 jobs:
   code-quality:
+    name: Lint and format code
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -44,6 +45,7 @@ jobs:
       run: pre-commit run --all-files --verbose --show-diff-on-failure
 
   tests:
+    name: Run tests
     runs-on: ubuntu-latest
     needs: [code-quality]
     steps:
