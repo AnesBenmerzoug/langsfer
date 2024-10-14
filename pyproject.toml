@@ -64,6 +64,7 @@ fastdist = "^1.1.6"
 gensim = "^4.3.0"
 numpy = "<2.0.0"
 scipy = "<1.13"
+numba = "^0.57.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
