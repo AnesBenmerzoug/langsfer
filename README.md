@@ -16,6 +16,14 @@ The implemented methods are:
 
 ### Installation
 
+To install the latest stable version from PyPI use:
+
+```shell
+pip install language-transfer
+```
+
+To install the latest development version from the repository use:
+
 ```shell
 git clone git@github.com:AnesBenmerzoug/language-transfer.git
 cd language-transfer
