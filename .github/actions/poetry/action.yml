@@ -56,7 +56,6 @@ runs:
       key: venv-${{ runner.os }}-${{ inputs.python_version }}-${{ hashFiles('poetry.lock') }}
   
   - name: Create Virtual Environment
-    if: steps.cached-venv.outputs.cache-hit != 'true'
     shell: bash
     run: |
       echo "Included optional dependency groups ${{ inputs.poetry_included_groups }}" 
