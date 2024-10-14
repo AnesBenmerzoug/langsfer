@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class EmbeddingInitializer(ABC):
     @abstractmethod
-    def __call__(self, *, seed: int | None = None) -> TransformersEmbeddings: ...
+    def initialize(self, *, seed: int | None = None) -> TransformersEmbeddings: ...
 
 
 class WeightedAverageEmbeddingsInitialization(EmbeddingInitializer):
@@ -44,7 +44,7 @@ class WeightedAverageEmbeddingsInitialization(EmbeddingInitializer):
         self.weights_strategy = weights_strategy
         self.token_overlap_strategy = token_overlap_strategy
 
-    def __call__(
+    def initialize(
         self, *, seed: int | None = None, show_progress: bool = False
     ) -> TransformersEmbeddings:
         rng = np.random.default_rng(seed)

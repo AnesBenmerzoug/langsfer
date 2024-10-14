@@ -22,6 +22,48 @@ cd language-transfer
 pip install .
 ```
 
+### WECHSEL
+
+The package provide high-level interfaces to instantiate each of the methods,
+without worrying too much about the package's internals.
+
+For example, to instantiate the WECHSEL method, you would use:
+
+```python
+from language_transfer import wechsel
+from language_transfer.initialization import WeightedAverageEmbeddingsInitialization
+from language_transfer.embeddings import TransformersEmbeddings, FastTextEmbeddings
+from language_transfer.utils import download_file
+from transformers import AutoTokenizer
+
+source_embeddings = TransformersEmbeddings.from_model_name_or_path("roberta-base")
+target_tokenizer = AutoTokenizer.from_pretrained("benjamin/roberta-base-wechsel-german")
+target_auxiliary_embeddings = FastTextEmbeddings.from_model_name_or_path("en")
+source_auxiliary_embeddings = FastTextEmbeddings.from_model_name_or_path("de")
+
+bilingual_dictionary_file = download_file(
+    "https://raw.githubusercontent.com/CPJKU/wechsel/main/dicts/data/swahili.txt",
+    "swahili.txt",
+)
+
+embedding_initializer = wechsel(
+    source_embeddings=source_embeddings,
+    target_tokenizer=target_tokenizer,
+    target_auxiliary_embeddings=target_auxiliary_embeddings,
+    source_auxiliary_embeddings=source_auxiliary_embeddings,
+    bilingual_dictionary_file=bilingual_dictionary_file,
+)
+```
+
+To initialize the target embeddings you would then use:
+
+```shell
+target_embeddings = embedding_initializer.initialize(seed=16, show_progress=True)
+```
+
+The result is an object of type `TransformersEmbeddings` that contain the initialized
+embeddings in its `embeddings_matrix` field and the target tokenizer in its `tokenizer` field.
+
 ## Contributing
 
 Refer to the [contributing guide](CONTRIBUTING.md) for instructions on you can make contributions to this repository.

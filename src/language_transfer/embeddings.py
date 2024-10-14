@@ -1,12 +1,17 @@
+import gzip
 import logging
 import os
+import shutil
 from abc import ABC, abstractmethod
-from urllib3.util import parse_url
+from pathlib import Path
 
 import numpy as np
+import requests
 from numpy.typing import NDArray
 from transformers import AutoModel, AutoTokenizer, PreTrainedTokenizer, PreTrainedModel
 from gensim.models.fasttext import FastText, load_facebook_model
+
+from language_transfer.constants import MODEL_CACHE_DIR
 
 __all__ = ["FastTextEmbeddings", "TransformersEmbeddings"]
 
@@ -45,16 +50,243 @@ class FastTextEmbeddings(Embeddings):
         model: FastText model.
     """
 
+    VALID_LANGUAGE_IDS = {
+        "af",
+        "sq",
+        "als",
+        "am",
+        "ar",
+        "an",
+        "hy",
+        "as",
+        "ast",
+        "az",
+        "ba",
+        "eu",
+        "bar",
+        "be",
+        "bn",
+        "bh",
+        "bpy",
+        "bs",
+        "br",
+        "bg",
+        "my",
+        "ca",
+        "ceb",
+        "bcl",
+        "ce",
+        "zh",
+        "cv",
+        "co",
+        "hr",
+        "cs",
+        "da",
+        "dv",
+        "nl",
+        "pa",
+        "arz",
+        "eml",
+        "en",
+        "myv",
+        "eo",
+        "et",
+        "hif",
+        "fi",
+        "fr",
+        "gl",
+        "ka",
+        "de",
+        "gom",
+        "el",
+        "gu",
+        "ht",
+        "he",
+        "mrj",
+        "hi",
+        "hu",
+        "is",
+        "io",
+        "ilo",
+        "id",
+        "ia",
+        "ga",
+        "it",
+        "ja",
+        "jv",
+        "kn",
+        "pam",
+        "kk",
+        "km",
+        "ky",
+        "ko",
+        "ku",
+        "ckb",
+        "la",
+        "lv",
+        "li",
+        "lt",
+        "lmo",
+        "nds",
+        "lb",
+        "mk",
+        "mai",
+        "mg",
+        "ms",
+        "ml",
+        "mt",
+        "gv",
+        "mr",
+        "mzn",
+        "mhr",
+        "min",
+        "xmf",
+        "mwl",
+        "mn",
+        "nah",
+        "nap",
+        "ne",
+        "new",
+        "frr",
+        "nso",
+        "no",
+        "nn",
+        "oc",
+        "or",
+        "os",
+        "pfl",
+        "ps",
+        "fa",
+        "pms",
+        "pl",
+        "pt",
+        "qu",
+        "ro",
+        "rm",
+        "ru",
+        "sah",
+        "sa",
+        "sc",
+        "sco",
+        "gd",
+        "sr",
+        "sh",
+        "scn",
+        "sd",
+        "si",
+        "sk",
+        "sl",
+        "so",
+        "azb",
+        "es",
+        "su",
+        "sw",
+        "sv",
+        "tl",
+        "tg",
+        "ta",
+        "tt",
+        "te",
+        "th",
+        "bo",
+        "tr",
+        "tk",
+        "uk",
+        "hsb",
+        "ur",
+        "ug",
+        "uz",
+        "vec",
+        "vi",
+        "vo",
+        "wa",
+        "war",
+        "cy",
+        "vls",
+        "fy",
+        "pnb",
+        "yi",
+        "yo",
+        "diq",
+        "zea",
+    }
+
     def __init__(self, model: FastText) -> None:
         self._model = model
 
     @classmethod
-    def from_model_name_or_path(cls, model_name_or_path: os.PathLike | str) -> None:
-        if os.path.exists(model_name_or_path):
-            model = FastText.load(model_name_or_path)
-        elif parse_url(model_name_or_path).scheme in ("http", "https"):
-            model = load_facebook_model(model_name_or_path)
+    def from_model_name_or_path(
+        cls, model_name_or_path: os.PathLike | str, *, force: bool = False
+    ) -> None:
+        if not os.path.exists(model_name_or_path):
+            if Path(model_name_or_path).suffix == ".bin":
+                model = load_facebook_model(model_name_or_path)
+            else:
+                model = FastText.load(model_name_or_path)
+        elif model_name_or_path.lower() in FastTextEmbeddings.VALID_LANGUAGE_IDS:
+            model_path = FastTextEmbeddings._download_model(
+                model_name_or_path, force=force
+            )
+            model = load_facebook_model(model_path)
+        else:
+            raise ValueError(
+                f"Did not know how to handle passed model name or path: {model_name_or_path}"
+            )
         return cls(model)
+
+    @staticmethod
+    def _download_model(
+        language_id: str, *, force: bool = False, chunk_size: int = 2**13
+    ) -> Path:
+        """Download pre-trained common-crawl vectors from fastText's website
+        https://fasttext.cc/docs/en/crawl-vectors.html
+
+        Original code from:
+        https://github.com/facebookresearch/fastText/blob/02c61efaa6d60d6bb17e6341b790fa199dfb8c83/python/fasttext_module/fasttext/util/util.py#L183
+        License: [MIT](https://github.com/facebookresearch/fastText/blob/02c61efaa6d60d6bb17e6341b790fa199dfb8c83/LICENSE)
+
+        Args:
+            language_id: String representing the ID of the language, e.g. "ar", for which the model will be downloaded
+            force: If True, overwrite cached files
+            chunk_size:
+
+        Returns:
+            Path to downloaded and extracted model file
+        """
+        if language_id not in FastTextEmbeddings.VALID_LANG_IDS:
+            raise Exception(
+                f"Invalid lang id. Please select among {FastTextEmbeddings.valid_lang_ids}"
+            )
+
+        file_path = f"cc.{language_id}.300.bin"
+        gz_file_path = MODEL_CACHE_DIR / "{file_name}.gz"
+
+        if file_path.is_file() and not force:
+            return file_path
+
+        if not gz_file_path.is_file() or force:
+            url = (
+                "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/%s"
+                % gz_file_path.name
+            )
+            response = requests.get(url, stream=True)
+            try:
+                response.raise_for_status()
+            except requests.HTTPError as e:
+                raise ValueError(f"Could not download model file from {url}") from e
+
+            with open(file_path, "wb") as f:
+                while True:
+                    chunk = response.read(chunk_size)
+                    if not chunk:
+                        break
+                    f.write(chunk)
+
+        with gzip.open(gz_file_path, "rb") as f:
+            with file_path.open("wb") as f_out:
+                shutil.copyfileobj(f, f_out)
+
+        return file_path
 
     @property
     def embeddings_matrix(self) -> NDArray:
