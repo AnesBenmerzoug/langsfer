@@ -1,0 +1,80 @@
+name: Setup Poetry Virtual Environment
+
+inputs:
+  python_version:
+    required: true
+    type: string
+  poetry_version:
+    required: true
+    type: string
+    default: '1.8.3'
+  poetry_included_groups: 
+    required: false
+    type: string
+  poetry_excluded_groups:
+    required: false
+    type: string
+
+runs:
+  using: "composite"
+  steps:
+  - name: Setup and Cache Python ${{ inputs.python_version }}
+    uses: actions/setup-python@v4
+    with:
+      python-version: ${{ inputs.python_version }}
+
+  - name: Install poetry
+    uses: abatilo/actions-poetry@v2
+
+  - name: Setup a local virtual environment (if no poetry.toml file)
+    run: |
+      poetry config virtualenvs.create true --local
+      poetry config virtualenvs.in-project true --local
+
+  - name: Load cached Poetry installation
+    id: cached-poetry
+    uses: actions/cache@v4
+    with:
+      path: ~/.local
+      key: poetry-${{ runner.os }}-${{ inputs.poetry_version }}
+  
+  - name: Install and configure Poetry
+    if: steps.cached-poetry.outputs.cache-hit != 'true'
+    uses: snok/install-poetry@v1
+    with:
+      version: ${{ inputs.poetry_version }}
+      virtualenvs-create: true
+      virtualenvs-in-project: true
+      installer-parallel: true
+  
+  - name: Load cached venv
+    id: cached-venv
+    uses: actions/cache@v4
+    with:
+      path: .venv
+      key: venv-${{ runner.os }}-${{ inputs.python_version }}-${{ hashFiles('poetry.lock') }}
+  
+  - if: steps.cached-venv.outputs.cache-hit != 'true'
+    name: Create Virtual Environment
+    shell: bash
+    run: |
+      echo "Included optional dependency groups ${{ inputs.poetry_included_groups }}" 
+      echo "Excluded optional dependency groups ${{ inputs.poetry_excluded_groups }}"
+
+      # --sync: Synchronize the environment with the locked packages and the specified groups.
+      COMMON_OPTS="--sync"
+      WITH_OPTS=
+      WITHOUT_OPTS=
+
+      if [ -n "${{ inputs.poetry_included_groups }}" ]; then
+        WITH_OPTS="--with ${{ inputs.poetry_included_groups }}"
+      fi
+      if [ -n "${{ inputs.poetry_excluded_groups }}" ]; then
+        WITHOUT_OPTS="--without ${{ inputs.poetry_excluded_groups }}"
+      fi
+
+      poetry install $COMMON_OPTS $WITH_OPTS $WITHOUT_OPTS
+
+      source $(poetry env info --path)/bin/activate
+      # Set the path for subsequent steps so that the environment is activated by default
+      echo PATH=$PATH >> $GITHUB_ENV

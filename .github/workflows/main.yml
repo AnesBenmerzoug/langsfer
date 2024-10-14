@@ -1,0 +1,94 @@
+name: Main CI Workflow
+
+on:
+  pull_request:
+    branches:
+    - main
+  push:
+    branches:
+    - main
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: Why did you trigger the pipeline?
+        required: False
+        default: Check if it runs again due to external changes
+
+
+env:
+  GITHUB_BOT_USERNAME: github-actions[bot]
+  GITHUB_BOT_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+  PY_COLORS: 1
+  PYTHON_VERSION: '3.11'
+  PACKAGE_NAME: 'language-transfer'
+
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Virtual Environment
+      uses: ./.github/actions/poetry
+      with:
+        python_version: {{ '${{ env.PYTHON_VERSION }}' }}
+        poetry_included_groups: dev
+
+    - name: Run pre-commit
+      run: pre-commit run --all-files --verbose --show-diff-on-failure
+
+  tests:
+    runs-on: ubuntu-latest
+    needs: [code-quality]
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Virtual Environment
+      uses: ./.github/actions/poetry
+      with:
+        python_version: {{ '${{ env.PYTHON_VERSION }}' }}
+        poetry_included_groups: dev
+    - name: Run pytest
+      run: pytest -vvv 
+
+  publish-testpypi:
+    name: Publish package to TestPyPI
+    runs-on: ubuntu-latest
+    needs: [code-quality, tests]
+    if: ${{ github.ref == 'refs/heads/main' }}
+    concurrency:
+      group: publish-testpypi
+    permissions:
+      id-token: write
+    environment:
+      name: testpypi
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+        
+      - name: Setup Virtual Environment
+        uses: ./.github/actions/poetry
+        with:
+          python_version: {{ '${{ env.PYTHON_VERSION }}' }}
+          poetry_included_groups: dev
+      
+      - name: Bump Version and Build Package
+        run: |
+          set -x
+          CURRENT_VERSION=$(bump-my-version show current_version)
+          BUILD_NUMBER=$GITHUB_RUN_NUMBER
+          NEW_VERSION=$(echo $CURRENT_VERSION | sed -e "s/-dev[0-9]\+/-dev${BUILD_NUMBER}/g")
+          bump-my-version bump --no-tag --no-commit --verbose --new-version ${NEW_VERSION}
+          echo "Version was bumped from ${CURRENT_VERSION} to ${NEW_VERSION}!"
+          poetry build --format=wheel
+
+      # TODO: uncomment once the repository and testpypi are configured
+      # - name: Publish to TestPyPI
+      #   uses: pypa/gh-action-pypi-publish@release/v1
+      #   with:
+      #     repository-url: https://test.pypi.org/legacy/
+      #     print-hash: true
+      #     verbose: true
