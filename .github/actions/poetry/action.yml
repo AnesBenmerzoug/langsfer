@@ -27,6 +27,7 @@ runs:
     uses: abatilo/actions-poetry@v2
 
   - name: Setup a local virtual environment (if no poetry.toml file)
+    shell: bash
     run: |
       poetry config virtualenvs.create true --local
       poetry config virtualenvs.in-project true --local
@@ -54,8 +55,9 @@ runs:
       path: .venv
       key: venv-${{ runner.os }}-${{ inputs.python_version }}-${{ hashFiles('poetry.lock') }}
   
-  - if: steps.cached-venv.outputs.cache-hit != 'true'
-    name: Create Virtual Environment
+  - name: Create Virtual Environment
+    if: steps.cached-venv.outputs.cache-hit != 'true'
+    shell: bash
     run: |
       echo "Included optional dependency groups ${{ inputs.poetry_included_groups }}" 
       echo "Excluded optional dependency groups ${{ inputs.poetry_excluded_groups }}"
