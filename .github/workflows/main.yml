@@ -74,7 +74,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          lfs: true
         
       - name: Setup Virtual Environment
         uses: ./.github/actions/poetry
