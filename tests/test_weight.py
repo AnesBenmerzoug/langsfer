@@ -4,7 +4,12 @@ from hypothesis import given, strategies as st
 from hypothesis.extra import numpy as numpy_st
 from numpy.typing import NDArray
 
-from language_transfer.weight import IdentityWeights, SoftmaxWeights, TopKWeights
+from language_transfer.weight import (
+    IdentityWeights,
+    SoftmaxWeights,
+    SparsemaxWeights,
+    TopKWeights,
+)
 
 
 @given(
@@ -49,6 +54,26 @@ def test_softmax_weights(
     input_scores: NDArray, temperature: float, expected_weights: NDArray
 ):
     weight_strategy = SoftmaxWeights(temperature)
+    np.testing.assert_almost_equal(
+        weight_strategy.apply(input_scores), expected_weights, decimal=2
+    )
+
+
+@pytest.mark.parametrize(
+    "input_scores, expected_weights",
+    [
+        (np.array([[0, 1.0]]), np.array([[0, 1.0]])),
+        (np.array([[0, 1.0], [1.0, 1.0]]), np.array([[0, 1.0], [0.5, 0.5]])),
+        (np.array([[-2, 0, 0.5]]), np.array([[0, 0.25, 0.75]])),
+        (
+            np.array([[0.49, -0.13, 0.64, 1.52, -0.23]]),
+            np.array([[0, 0, 0.06, 0.94, 0]]),
+        ),
+        (np.array([[0, 1.0, 2.0], [10, 20, 30]]), np.array([[0, 0, 1.0], [0, 0, 1.0]])),
+    ],
+)
+def test_sparsemax_weights(input_scores: NDArray, expected_weights: NDArray):
+    weight_strategy = SparsemaxWeights()
     np.testing.assert_almost_equal(
         weight_strategy.apply(input_scores), expected_weights, decimal=2
     )
