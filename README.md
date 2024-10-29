@@ -2,7 +2,18 @@
     <img alt="Langsfer Logo" src="https://raw.githubusercontent.com/AnesBenmerzoug/langsfer/refs/heads/main/logo.svg" width="200"/>
 </p>
 <p align="center" style="text-align:center;">
-    A library for language transfer methods and algorithms.
+    <em>Langsfer, a library for language transfer methods and algorithms.</em>
+</p>
+<p align="center">
+  <a href="https://github.com/AnesBenmerzoug/langsfer/actions?query=event%3Apush+branch%3Amain" target="_blank">
+    <img src="https://github.com/AnesBenmerzoug/langsfer/actions/workflows/main.yml/badge.svg?event=push&branch=main" alt="CI">
+  </a>
+  <a href="https://test.pypi.org/project/langsfer/">
+    <img alt="TestPyPI Version" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Ftest.pypi.org%2Fpypi%2Flangsfer%2Fjson&query=%24.info.version&prefix=v&logo=pypi&logoColor=white&label=TestPyPI&link=https%3A%2F%2Ftest.pypi.org%2Fproject%2Flangsfer%2F">
+  </a>
+  <a href="https://github.com/AnesBenmerzoug/langsfer/blob/main/LICENSE">
+    <img alt="License" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Ftest.pypi.org%2Fpypi%2Flangsfer%2Fjson&query=%24.info.license&logoColor=white&label=License&link=https%3A%2F%2Ftest.pypi.org%2Fproject%2Flangsfer%2F">
+  </a>
 </p>
 
 Language transfer refers to a few related things:
