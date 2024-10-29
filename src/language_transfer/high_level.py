@@ -1,6 +1,7 @@
-"""This module contains high-level user interfaces
-to make it easier certain well known methods without necessarily
-instantiating all the details of the different methods.
+"""This module contains high-level user functions
+for well-known methods described in papers and publications.
+These are meant to make it easier for users who don't necessarily
+want or need to care about all the details of the package.
 """
 
 import os
@@ -11,11 +12,20 @@ from language_transfer.initialization import WeightedAverageEmbeddingsInitializa
 from language_transfer.alignment import BilingualDictionaryAlignment, IdentityAlignment
 from language_transfer.embeddings import TransformersEmbeddings, FastTextEmbeddings
 from language_transfer.similarity import CosineSimilarity
-from language_transfer.weight import IdentityWeights, SoftmaxWeights, TopKWeights
-from language_transfer.token_overlap import SpecialTokenOverlap, ExactMatchTokenOverlap
+from language_transfer.weight import (
+    IdentityWeights,
+    SoftmaxWeights,
+    TopKWeights,
+    SparsemaxWeights,
+)
+from language_transfer.token_overlap import (
+    SpecialTokenOverlap,
+    ExactMatchTokenOverlap,
+    FuzzyMatchTokenOverlap,
+)
 
 
-__all__ = ["wechsel", "clp_transfer"]
+__all__ = ["wechsel", "clp_transfer", "focus"]
 
 
 def wechsel(
@@ -68,13 +78,13 @@ def clp_transfer(
     target_tokenizer: PreTrainedTokenizerBase,
     target_auxiliary_embeddings: TransformersEmbeddings,
 ):
-    """Cross-Lingual and Progresseive (CLP) Transfer method.
+    """Cross-Lingual and Progressive (CLP) Transfer method.
 
     Described in [CLP-Transfer: Efficient language model training through cross-lingual and progressive transfer learning.](https://arxiv.org/abs/2301.09626) Ostendorff, Malte, and Georg Rehm. arXiv preprint arXiv:2301.09626 (2023).
 
     Args:
         source_embeddings:
-        target_tokenizer:
+        target_tokenizer: Target language tokenizer
         target_auxiliary_embeddings:
     """
     embeddings_init = WeightedAverageEmbeddingsInitialization(
@@ -85,5 +95,34 @@ def clp_transfer(
         similarity_strategy=CosineSimilarity(),
         weights_strategy=IdentityWeights(),
         token_overlap_strategy=ExactMatchTokenOverlap(),
+    )
+    return embeddings_init
+
+
+def focus(
+    source_embeddings: TransformersEmbeddings,
+    target_tokenizer: PreTrainedTokenizerBase,
+    target_auxiliary_embeddings: FastTextEmbeddings,
+    source_auxiliary_embeddings: FastTextEmbeddings,
+) -> WeightedAverageEmbeddingsInitialization:
+    """Fast Overlapping Token Combinations Using Sparsemax (FOCUS) method.
+
+    Described in [FOCUS: Effective Embedding Initialization for Specializing Pretrained Multilingual Models on a Single Language.](https://arxiv.org/abs/2305.14481) Dobler, Konstantin, and Gerard de Melo. arXiv preprint arXiv:2305.14481 (2023).
+
+    Args:
+        source_embeddings:
+        target_tokenizer: Target language tokenizer
+        target_auxiliary_embeddings:
+        source_auxiliary_embeddings:
+    """
+    embeddings_init = WeightedAverageEmbeddingsInitialization(
+        source_embeddings,
+        target_tokenizer,
+        target_auxiliary_embeddings,
+        source_auxiliary_embeddings=source_auxiliary_embeddings,
+        alignment_strategy=IdentityAlignment(),
+        similarity_strategy=CosineSimilarity(),
+        weights_strategy=SparsemaxWeights(),
+        token_overlap_strategy=FuzzyMatchTokenOverlap(),
     )
     return embeddings_init
