@@ -1,10 +1,13 @@
-# Language Transfer
+# Langsfer
 
-This package contains implementations for some methods and algorithms for language transfer.
+This package contains implementations for language transfer methods and algorithms.
 
-Language transfer refers to initializing a Large Language Model (LLM) in a new,
-typically low-resource, target language (e.g. German, Arabic) from another LLM
-trained in high-resource source language (e.g. English).
+Language transfer refers to a few related things:
+- initializing a Large Language Model (LLM) in a new, typically low-resource, target language (e.g. German, Arabic)
+  from another LLM trained in high-resource source language (e.g. English),
+- extending the vocabulary of an LLM by adding new tokens and initializing their embeddings
+  in a manner that allows them to be used with little to no extra training,
+- specializing the vocabulary of a multilingual LLM to one of its supported languages. 
 
 The implemented methods are:
 
