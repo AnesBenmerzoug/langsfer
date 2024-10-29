@@ -1,5 +1,5 @@
 <p align="center" style="text-align:center;">
-    <img alt="Langsfer Logo" src="https://raw.githubusercontent.com/AnesBenmerzoug/langsfer/refs/heads/main/logo.svg?token=GHSAT0AAAAAACYAYCJQTYMUCNSXXR55O5JKZZBKD2Q" width="200"/>
+    <img alt="Langsfer Logo" src="https://raw.githubusercontent.com/AnesBenmerzoug/langsfer/refs/heads/main/logo.svg" width="200"/>
 </p>
 <p align="center" style="text-align:center;">
     A library for language transfer methods and algorithms.
