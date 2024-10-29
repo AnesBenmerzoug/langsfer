@@ -1,5 +1,5 @@
 <p align="center" style="text-align:center;">
-    <img alt="Langsfer Logo" src="logo.svg" width="200"/>
+    <img alt="Langsfer Logo" src="https://raw.githubusercontent.com/AnesBenmerzoug/langsfer/refs/heads/main/logo.svg?token=GHSAT0AAAAAACYAYCJQTYMUCNSXXR55O5JKZZBKD2Q" width="200"/>
 </p>
 <p align="center" style="text-align:center;">
     A library for language transfer methods and algorithms.
@@ -97,6 +97,16 @@ source_model.save_pretrained("path/to/target_model")
 ## Contributing
 
 Refer to the [contributing guide](CONTRIBUTING.md) for instructions on you can make contributions to this repository.
+
+## Logo
+
+The langsfer logo was created by my good friend [Zakaria Taleb Hacine](https://behance.net/zakariahacine), a 3D artist with 
+industry experience and a packed portfolio.
+
+The logo contains the latin alphabet letters A and I which are an acronym for Artificial Intelligence and the arabic alphabet letters
+أ and ذ which are an acronym for الذكاء الاصطناعي, which is Artificial Intelligence in arabic.
+
+The fonts used are [Ethnocentric Regular](https://www.myfonts.com/products/ethnocentric-ethnocentric-970121) and [Readex Pro](https://fonts.google.com/specimen/Readex+Pro).
 
 ## License
 
