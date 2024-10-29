@@ -67,8 +67,8 @@ jobs:
     concurrency:
       group: publish-testpypi
     # TODO: uncomment once the repository and testpypi are configured
-    # permissions:
-    #   id-token: write
+    permissions:
+      id-token: write
     # environment:
     #   name: testpypi
     steps:
@@ -92,10 +92,9 @@ jobs:
           echo "Version was bumped from ${CURRENT_VERSION} to ${NEW_VERSION}!"
           poetry build --format=wheel
 
-      # TODO: uncomment once the repository and testpypi are configured
-      # - name: Publish to TestPyPI
-      #   uses: pypa/gh-action-pypi-publish@release/v1
-      #   with:
-      #     repository-url: https://test.pypi.org/legacy/
-      #     print-hash: true
-      #     verbose: true
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          print-hash: true
+          verbose: true
