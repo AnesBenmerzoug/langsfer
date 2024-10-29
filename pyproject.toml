@@ -3,13 +3,13 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "language-transfer"
+name = "langsfer"
 version = "0.0.1-dev0"
 description = ""
 authors = ["Anes Benmerzoug <anes.benmerzoug@gmail.com>"]
 license = "LGPL-2.1-only"
 readme = "README.md"
-repository = "https://github.com/AnesBenmerzoug/language-transfer"
+repository = "https://github.com/AnesBenmerzoug/langsfer"
 keywords = [""]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -24,7 +24,7 @@ classifiers = [
     "Intended Audience :: Science/Research",
 ]
 packages = [
-    {include = "language_transfer", from = "src"}
+    {include = "langsfer", from = "src"}
 ]
 
 [tool.bumpversion]
@@ -48,7 +48,7 @@ serialize = [
     "{major}.{minor}.{patch}",
 ]
 files = [
-    { filename = "src/language_transfer/__init__.py", search = '__version__ = "{current_version}"', replace = '__version__ = "{new_version}"' },
+    { filename = "src/langsfer/__init__.py", search = '__version__ = "{current_version}"', replace = '__version__ = "{new_version}"' },
     { filename = "pyproject.toml", search = 'version = "{current_version}"', replace = 'version = "{new_version}"' }
 ]
 
@@ -77,7 +77,7 @@ hypothesis = {extras = ["numpy"], version = "^6.115.0"}
 huggingface-hub = {extras = ["cli"], version = "^0.25.2"}
 
 [tool.pytest.ini_options]
-addopts = "-vv --failed-first --durations=10 --profile-svg --cov=language-transfer --cov-report=term-missing --cov-report=xml"
+addopts = "-vv --failed-first --durations=10 --profile-svg --cov=langsfer --cov-report=term-missing --cov-report=xml"
 testpaths = [
     "tests"
 ]
@@ -88,16 +88,13 @@ log_cli = true
 log_level = "INFO"
 
 [tool.coverage.run]
-source_pkgs = ["language_transfer", "tests"]
+source_pkgs = ["langsfer", "tests"]
 branch = true
 parallel = true
-omit = [
-    "src/language_transfer/__about__.py",
-]
 
 [tool.coverage.paths]
-language_transfer = ["src/language_transfer", "*/language-transfer/src/language_transfer"]
-tests = ["tests", "*/language-transfer/tests"]
+langsfer = ["src/langsfer", "*/langsfer/src/langsfer"]
+tests = ["tests", "*/langsfer/tests"]
 
 [tool.coverage.report]
 exclude_lines = [

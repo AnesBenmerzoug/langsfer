@@ -61,7 +61,7 @@ class SparsemaxWeights(WeightsStrategy):
     The original code is license under the [MIT license.](https://github.com/AndreasMadsen/course-02456-sparsemax/blob/cd73efc1267b5c3b319fb3dc77774c99c10d5d82/LICENSE.md)
 
     Examples:
-        >>> from language_transfer.weight import SparsemaxWeights
+        >>> from langsfer.weight import SparsemaxWeights
         >>> import numpy as np
         >>> weights_strategy = SparsemaxWeights()
         >>> scores = np.array([[0.0, 1.0, 2.0], [10, 20, 30]])
@@ -100,7 +100,7 @@ class TopKWeights(WeightsStrategy):
     The original code is licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
 
     Examples:
-        >>> from language_transfer.weights import TopKWeights
+        >>> from langsfer.weights import TopKWeights
         >>> import numpy as np
         >>> weight_strategy = TopKWeights(k=1)
         >>> weight_strategy.apply(np.array([[3, 1, 10]])).tolist()

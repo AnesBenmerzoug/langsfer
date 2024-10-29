@@ -1,7 +1,7 @@
 import pytest
 from transformers import PreTrainedTokenizerBase, AutoTokenizer
 
-from language_transfer.token_overlap import (
+from langsfer.token_overlap import (
     NoTokenOverlap,
     SpecialTokenOverlap,
     ExactMatchTokenOverlap,

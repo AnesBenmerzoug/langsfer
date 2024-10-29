@@ -7,11 +7,11 @@ from numpy.typing import NDArray
 from transformers import PreTrainedTokenizerBase
 from tqdm.auto import tqdm
 
-from language_transfer.alignment import AlignmentStrategy, IdentityAlignment
-from language_transfer.embeddings import TransformersEmbeddings, FastTextEmbeddings
-from language_transfer.similarity import SimilarityStrategy, CosineSimilarity
-from language_transfer.weight import WeightsStrategy, IdentityWeights
-from language_transfer.token_overlap import TokenOverlapStrategy, NoTokenOverlap
+from langsfer.alignment import AlignmentStrategy, IdentityAlignment
+from langsfer.embeddings import TransformersEmbeddings, FastTextEmbeddings
+from langsfer.similarity import SimilarityStrategy, CosineSimilarity
+from langsfer.weight import WeightsStrategy, IdentityWeights
+from langsfer.token_overlap import TokenOverlapStrategy, NoTokenOverlap
 
 __all__ = ["EmbeddingInitializer"]
 

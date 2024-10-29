@@ -11,7 +11,7 @@ from numpy.typing import NDArray
 from transformers import AutoModel, AutoTokenizer, PreTrainedTokenizer, PreTrainedModel
 from gensim.models.fasttext import FastText, load_facebook_model
 
-from language_transfer.constants import MODEL_CACHE_DIR
+from langsfer.constants import MODEL_CACHE_DIR
 
 __all__ = ["FastTextEmbeddings", "TransformersEmbeddings"]
 

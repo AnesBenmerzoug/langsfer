@@ -8,17 +8,17 @@ import os
 
 from transformers import PreTrainedTokenizerBase
 
-from language_transfer.initialization import WeightedAverageEmbeddingsInitialization
-from language_transfer.alignment import BilingualDictionaryAlignment, IdentityAlignment
-from language_transfer.embeddings import TransformersEmbeddings, FastTextEmbeddings
-from language_transfer.similarity import CosineSimilarity
-from language_transfer.weight import (
+from langsfer.initialization import WeightedAverageEmbeddingsInitialization
+from langsfer.alignment import BilingualDictionaryAlignment, IdentityAlignment
+from langsfer.embeddings import TransformersEmbeddings, FastTextEmbeddings
+from langsfer.similarity import CosineSimilarity
+from langsfer.weight import (
     IdentityWeights,
     SoftmaxWeights,
     TopKWeights,
     SparsemaxWeights,
 )
-from language_transfer.token_overlap import (
+from langsfer.token_overlap import (
     SpecialTokenOverlap,
     ExactMatchTokenOverlap,
     FuzzyMatchTokenOverlap,

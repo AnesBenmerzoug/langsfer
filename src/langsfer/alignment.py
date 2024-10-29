@@ -8,7 +8,7 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.linalg import orthogonal_procrustes
 
-from language_transfer.embeddings import FastTextEmbeddings
+from langsfer.embeddings import FastTextEmbeddings
 
 __all__ = ["IdentityAlignment", "BilingualDictionaryAlignment"]
 

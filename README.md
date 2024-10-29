@@ -19,14 +19,14 @@ The implemented methods are:
 To install the latest stable version from PyPI use:
 
 ```shell
-pip install language-transfer
+pip install langsfer
 ```
 
 To install the latest development version from the repository use:
 
 ```shell
-git clone git@github.com:AnesBenmerzoug/language-transfer.git
-cd language-transfer
+git clone git@github.com:AnesBenmerzoug/langsfer.git
+cd langsfer
 pip install .
 ```
 
@@ -38,10 +38,10 @@ without worrying too much about the package's internals.
 For example, to instantiate the WECHSEL method, you would use:
 
 ```python
-from language_transfer.high_level import wechsel
-from language_transfer.initialization import WeightedAverageEmbeddingsInitialization
-from language_transfer.embeddings import TransformersEmbeddings, FastTextEmbeddings
-from language_transfer.utils import download_file
+from langsfer.high_level import wechsel
+from langsfer.initialization import WeightedAverageEmbeddingsInitialization
+from langsfer.embeddings import TransformersEmbeddings, FastTextEmbeddings
+from langsfer.utils import download_file
 from transformers import AutoTokenizer
 
 source_embeddings = TransformersEmbeddings.from_model_name_or_path("roberta-base")

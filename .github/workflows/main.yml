@@ -20,7 +20,7 @@ env:
   GITHUB_BOT_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
   PY_COLORS: 1
   PYTHON_VERSION: '3.11'
-  PACKAGE_NAME: 'language-transfer'
+  PACKAGE_NAME: 'langsfer'
 
 
 defaults:
