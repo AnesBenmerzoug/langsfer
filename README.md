@@ -1,6 +1,9 @@
-# Langsfer
-
-This package contains implementations for language transfer methods and algorithms.
+<p align="center" style="text-align:center;">
+    <img alt="Langsfer Logo" src="logo.svg" width="200"/>
+</p>
+<p align="center" style="text-align:center;">
+    A library for language transfer methods and algorithms.
+</p>
 
 Language transfer refers to a few related things:
 - initializing a Large Language Model (LLM) in a new, typically low-resource, target language (e.g. German, Arabic)
