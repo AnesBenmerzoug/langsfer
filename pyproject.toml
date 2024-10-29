@@ -72,11 +72,12 @@ pre-commit = "^4.0.1"
 pytest = "^8.3.3"
 pytest-cov = "^5.0.0"
 pytest-timeout = "^2.3.1"
+pytest-profiling = "^1.7.0"
 hypothesis = {extras = ["numpy"], version = "^6.115.0"}
 huggingface-hub = {extras = ["cli"], version = "^0.25.2"}
 
 [tool.pytest.ini_options]
-addopts = "-vv --failed-first --durations=10 --cov=language-transfer --cov-report=term-missing --cov-report=xml"
+addopts = "-vv --failed-first --durations=10 --profile-svg --cov=language-transfer --cov-report=term-missing --cov-report=xml"
 testpaths = [
     "tests"
 ]
