@@ -81,9 +81,9 @@ from transformers import AutoModel
 source_model = AutoModel.from_pretrained("roberta-base")
 source_model.copy()
 # Resize its embedding layer
-source_model.resize_token_embeddings(new_num_tokens=len(target_tokenizer.vocabulary))
+source_model.resize_token_embeddings(len(target_tokenizer))
 # Replace the source embeddings matrix with the target embeddings matrix
-source_model.get_input_embeddings()
+source_model.get_input_embeddings().weight.data = target_embeddings.embeddings_matrix
 # Save the new model
 source_model.save_pretrained("path/to/target_model")
 ```
