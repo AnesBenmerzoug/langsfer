@@ -67,16 +67,16 @@ scipy = "<1.13"
 numba = "^0.57.0"
 
 [tool.poetry.group.dev.dependencies]
+bump-my-version = "^0.27.0"
+pre-commit = "^4.0.1"
 pytest = "^8.3.3"
 pytest-cov = "^5.0.0"
-pre-commit = "^4.0.1"
 pytest-timeout = "^2.3.1"
-huggingface-hub = {extras = ["cli"], version = "^0.25.2"}
 hypothesis = {extras = ["numpy"], version = "^6.115.0"}
-bump-my-version = "^0.27.0"
+huggingface-hub = {extras = ["cli"], version = "^0.25.2"}
 
 [tool.pytest.ini_options]
-addopts = "-vv --cov=language-transfer --cov-report=term-missing --cov-report=xml --durations=10"
+addopts = "-vv --failed-first --durations=10 --cov=language-transfer --cov-report=term-missing --cov-report=xml"
 testpaths = [
     "tests"
 ]
