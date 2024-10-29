@@ -2,6 +2,7 @@ import logging
 from abc import ABC, abstractmethod
 
 import numpy as np
+import torch
 from numpy.typing import NDArray
 from transformers import PreTrainedTokenizerBase
 from tqdm.auto import tqdm
@@ -44,6 +45,7 @@ class WeightedAverageEmbeddingsInitialization(EmbeddingInitializer):
         self.weights_strategy = weights_strategy
         self.token_overlap_strategy = token_overlap_strategy
 
+    @torch.no_grad()
     def initialize(
         self, *, seed: int | None = None, show_progress: bool = False
     ) -> TransformersEmbeddings:
