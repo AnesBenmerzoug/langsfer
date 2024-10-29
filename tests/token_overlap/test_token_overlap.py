@@ -1,3 +1,4 @@
+import pytest
 from transformers import PreTrainedTokenizerBase, AutoTokenizer
 
 from language_transfer.token_overlap import (
@@ -52,12 +53,19 @@ def test_exact_match_token_overlap(
 
 
 def test_focus_fuzzy_token_overlap(focus_fuzzy_token_overlap: dict):
-    source_tokenizer = AutoTokenizer.from_pretrained(
-        focus_fuzzy_token_overlap["source_model"]
-    )
-    target_tokenizer = AutoTokenizer.from_pretrained(
-        focus_fuzzy_token_overlap["target_model"]
-    )
+    source_model_name = focus_fuzzy_token_overlap["source_model"]
+    target_model_name = focus_fuzzy_token_overlap["target_model"]
+
+    if (
+        source_model_name == "xlm-roberta-base"
+        and target_model_name == "benjamin/gpt2-wechsel-french"
+    ):
+        pytest.xfail(
+            "Expected test failure that indicates a difference from the original implementation in FOCUS"
+        )
+
+    source_tokenizer = AutoTokenizer.from_pretrained(source_model_name)
+    target_tokenizer = AutoTokenizer.from_pretrained(target_model_name)
     token_overlap_strategy = FuzzyMatchTokenOverlap()
     overlapping_tokens, non_overlapping_tokens = token_overlap_strategy.apply(
         source_tokenizer, target_tokenizer
