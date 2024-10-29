@@ -66,11 +66,10 @@ jobs:
     if: ${{ github.ref == 'refs/heads/main' }}
     concurrency:
       group: publish-testpypi
-    # TODO: uncomment once the repository and testpypi are configured
     permissions:
       id-token: write
-    # environment:
-    #   name: testpypi
+    environment:
+      name: testpypi
     steps:
       - uses: actions/checkout@v4
         with:
