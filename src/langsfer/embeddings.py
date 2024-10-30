@@ -1,6 +1,7 @@
 import gzip
 import logging
 import os
+import tempfile
 import shutil
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -218,7 +219,7 @@ class FastTextEmbeddings(Embeddings):
     def from_model_name_or_path(
         cls, model_name_or_path: os.PathLike | str, *, force: bool = False
     ) -> None:
-        if not os.path.exists(model_name_or_path):
+        if os.path.exists(model_name_or_path):
             if Path(model_name_or_path).suffix == ".bin":
                 model = load_facebook_model(model_name_or_path)
             else:
@@ -253,38 +254,36 @@ class FastTextEmbeddings(Embeddings):
         Returns:
             Path to downloaded and extracted model file
         """
-        if language_id not in FastTextEmbeddings.VALID_LANG_IDS:
+        if language_id not in FastTextEmbeddings.VALID_LANGUAGE_IDS:
             raise Exception(
-                f"Invalid lang id. Please select among {FastTextEmbeddings.valid_lang_ids}"
+                f"Invalid lang id. Please select among {FastTextEmbeddings.VALID_LANGUAGE_IDS}"
             )
 
-        file_path = f"cc.{language_id}.300.bin"
-        gz_file_path = MODEL_CACHE_DIR / "{file_name}.gz"
+        file_name = f"cc.{language_id}.300.bin"
+        file_path = MODEL_CACHE_DIR / file_name
 
         if file_path.is_file() and not force:
+            logger.info(f"Found existing fasttext model file {file_path}")
             return file_path
 
-        if not gz_file_path.is_file() or force:
-            url = (
-                "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/%s"
-                % gz_file_path.name
-            )
-            response = requests.get(url, stream=True)
-            try:
-                response.raise_for_status()
-            except requests.HTTPError as e:
-                raise ValueError(f"Could not download model file from {url}") from e
+        with tempfile.TemporaryDirectory() as tempdir:
+            gz_file_path = Path(tempdir) / f"{file_name}.gz"
+            url = f"https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/{gz_file_path.name}"
+            logger.info(f"Downloading fasttext model file from {url}")
+            
+            with requests.get(url, stream=True) as response:
+                try:
+                    response.raise_for_status()
+                except requests.HTTPError as e:
+                    raise ValueError(f"Could not download model file from {url}") from e
 
-            with open(file_path, "wb") as f:
-                while True:
-                    chunk = response.read(chunk_size)
-                    if not chunk:
-                        break
-                    f.write(chunk)
+                with open(gz_file_path, "wb") as f:
+                    for chunk in response.iter_content(chunk_size):
+                        f.write(chunk)
 
-        with gzip.open(gz_file_path, "rb") as f:
-            with file_path.open("wb") as f_out:
-                shutil.copyfileobj(f, f_out)
+            with gzip.open(gz_file_path, "rb") as f:
+                with file_path.open("wb") as f_out:
+                    shutil.copyfileobj(f, f_out)
 
         return file_path
 
