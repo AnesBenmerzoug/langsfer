@@ -60,11 +60,10 @@ optional_value = "final"
 python = ">=3.10,<3.13"
 torch = "^2.0.0"
 transformers = "^4.26.0"
-fastdist = "^1.1.6"
 gensim = "^4.3.0"
 numpy = "<2.0.0"
 scipy = "<1.13"
-numba = "^0.57.0"
+scikit-learn = "^1.2.0"
 
 [tool.poetry.group.dev.dependencies]
 bump-my-version = "^0.27.0"
