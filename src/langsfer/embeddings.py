@@ -9,7 +9,12 @@ from pathlib import Path
 import numpy as np
 import requests
 from numpy.typing import NDArray
-from transformers import AutoModel, AutoTokenizer, PreTrainedTokenizer, PreTrainedModel
+from transformers import (
+    AutoModel,
+    AutoTokenizer,
+    PreTrainedTokenizerBase,
+    PreTrainedModel,
+)
 from gensim.models.fasttext import FastText, load_facebook_model
 
 from langsfer.constants import MODEL_CACHE_DIR
@@ -270,7 +275,7 @@ class FastTextEmbeddings(Embeddings):
             gz_file_path = Path(tempdir) / f"{file_name}.gz"
             url = f"https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/{gz_file_path.name}"
             logger.info(f"Downloading fasttext model file from {url}")
-            
+
             with requests.get(url, stream=True) as response:
                 try:
                     response.raise_for_status()
@@ -368,7 +373,7 @@ class TransformersEmbeddings(Embeddings):
     """
 
     def __init__(
-        self, embeddings_matrix: NDArray, tokenizer: PreTrainedTokenizer
+        self, embeddings_matrix: NDArray, tokenizer: PreTrainedTokenizerBase
     ) -> None:
         self._embeddings_matrix = embeddings_matrix
         self._tokenizer = tokenizer
@@ -386,7 +391,7 @@ class TransformersEmbeddings(Embeddings):
         else:
             embeddings_matrix = TransformersEmbeddings._get_unembedding_matrix(model)
 
-        tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(
+        tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(
             model_name_or_path
         )
         return cls(embeddings_matrix, tokenizer)
@@ -408,8 +413,12 @@ class TransformersEmbeddings(Embeddings):
         return self._embeddings_matrix
 
     @property
+    def tokenizer(self) -> PreTrainedTokenizerBase:
+        return self._tokenizer
+
+    @property
     def vocabulary(self) -> list[str]:
-        tokens = list(self._vocab.keys())
+        tokens = list(self._tokenizer.vocab.keys())
         return tokens
 
     def get_id_for_token(self, token: str) -> int:
