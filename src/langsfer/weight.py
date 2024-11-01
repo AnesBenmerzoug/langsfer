@@ -16,7 +16,7 @@ class WeightsStrategy(ABC):
             raise ValueError(f"scores must have 2 dimensions instead of {scores.ndim}")
         weights = self._compute_weights(scores)
         if self._next_strategy is not None:
-            weights = self._next_strategy(weights)
+            weights = self._next_strategy.apply(weights)
         if weights.ndim != 2:
             raise RuntimeError(
                 f"expected weights to have 2 dimensions instead of {weights.ndim}"
@@ -32,6 +32,7 @@ class WeightsStrategy(ABC):
                 f"other must be an instance of WeightsStrategy instead of {type(other)}"
             )
         self._next_strategy = other
+        return self
 
 
 class IdentityWeights(WeightsStrategy):
