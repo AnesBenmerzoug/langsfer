@@ -75,6 +75,11 @@ pytest-profiling = "^1.7.0"
 hypothesis = {extras = ["numpy"], version = "^6.115.0"}
 huggingface-hub = {extras = ["cli"], version = "^0.25.2"}
 jupyterlab = "^4.3.0"
+iprogress = "^0.4"
+datasets = "^3.1.0"
+accelerate = "^1.0.1"
+ipywidgets = "^8.1.5"
+tensorboard = "^2.18.0"
 
 [tool.pytest.ini_options]
 addopts = "-vv --failed-first --durations=10 --profile-svg --cov=langsfer --cov-report=term-missing --cov-report=xml"
