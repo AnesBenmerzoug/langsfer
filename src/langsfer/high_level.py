@@ -33,7 +33,7 @@ def wechsel(
     target_tokenizer: PreTrainedTokenizerBase,
     target_auxiliary_embeddings: FastTextEmbeddings,
     source_auxiliary_embeddings: FastTextEmbeddings,
-    bilingual_dictionary: dict[str, list[str]] | None,
+    bilingual_dictionary: dict[str, list[str]] | None = None,
     bilingual_dictionary_file: str | os.PathLike | None = None,
     *,
     temperature: float = 0.7,
