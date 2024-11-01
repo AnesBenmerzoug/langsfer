@@ -49,7 +49,7 @@ class BilingualDictionaryAlignment(AlignmentStrategy):
         self,
         source_word_embeddings: FastTextEmbeddings,
         target_word_embeddings: FastTextEmbeddings,
-        bilingual_dictionary: dict[str, list[str]] | None,
+        bilingual_dictionary: dict[str, list[str]] | None = None,
         bilingual_dictionary_file: str | os.PathLike | None = None,
     ) -> None:
         if bilingual_dictionary is None and bilingual_dictionary_file is None:
@@ -90,19 +90,14 @@ class BilingualDictionaryAlignment(AlignmentStrategy):
 
         return bilingual_dictionary
 
-    @staticmethod
-    def _compute_alignment_matrix(
-        source_word_embeddings: FastTextEmbeddings,
-        target_word_embeddings: FastTextEmbeddings,
-        bilingual_dictionary: dict[str, list[str]],
-    ) -> NDArray:
+    def _compute_alignment_matrix(self) -> NDArray:
         logger.info(
             "Computing word embedding alignment matrix from bilingual dictionary"
         )
         correspondences = []
 
-        for source_word in bilingual_dictionary:
-            for target_word in bilingual_dictionary[source_word]:
+        for source_word in self.bilingual_dictionary:
+            for target_word in self.bilingual_dictionary[source_word]:
                 source_word_variants = (
                     source_word,
                     source_word.lower(),
@@ -115,26 +110,30 @@ class BilingualDictionaryAlignment(AlignmentStrategy):
                 )
 
                 for src_w, tgt_w in product(source_word_variants, target_word_variants):
+                    # Check if 'src_w' is a valid token in source word embeddings
                     try:
-                        src_word_vector = source_word_embeddings.get_vector_for_token(
-                            src_w
-                        )
+                        self.source_word_embeddings.get_id_for_token(src_w)
                     except KeyError:
                         logger.debug(
-                            f"Could not find source word embedding for word '{src_w}'"
+                            f"Could not find source embedding id for word '{src_w}'"
                         )
                         continue
 
+                    # Check if 'tgt_w' is a valid token in target word embeddings
                     try:
-                        tgt_word_vector = target_word_embeddings.get_vector_for_token(
-                            tgt_w
-                        )
+                        self.target_word_embeddings.get_id_for_token(tgt_w)
                     except KeyError:
                         logger.debug(
-                            f"Could not find target word embedding for word '{tgt_w}'"
+                            f"Could not find target embedding id for word '{tgt_w}'"
                         )
                         continue
 
+                    src_word_vector = self.source_word_embeddings.get_vector_for_token(
+                        src_w
+                    )
+                    tgt_word_vector = self.target_word_embeddings.get_vector_for_token(
+                        tgt_w
+                    )
                     correspondences.append([src_word_vector, tgt_word_vector])
 
         correspondences = np.array(correspondences)
@@ -146,10 +145,6 @@ class BilingualDictionaryAlignment(AlignmentStrategy):
         return alignment_matrix
 
     def apply(self, embedding_matrix: NDArray) -> NDArray:
-        alignment_matrix = self._compute_alignment_matrix(
-            self.source_word_embeddings,
-            self.target_word_embeddings,
-            self.bilingual_dictionary,
-        )
+        alignment_matrix = self._compute_alignment_matrix()
         aligned_embedding_matrix = embedding_matrix @ alignment_matrix
         return aligned_embedding_matrix
