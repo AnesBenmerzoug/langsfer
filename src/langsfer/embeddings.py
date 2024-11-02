@@ -19,13 +19,13 @@ from gensim.models.fasttext import FastText, load_facebook_model
 
 from langsfer.constants import MODEL_CACHE_DIR
 
-__all__ = ["FastTextEmbeddings", "TransformersEmbeddings"]
+__all__ = ["AuxiliaryEmbeddings", "FastTextEmbeddings", "TransformersEmbeddings"]
 
 logger = logging.getLogger(__name__)
 
 
-class Embeddings(ABC):
-    """Base class for embeddings."""
+class AuxiliaryEmbeddings(ABC):
+    """Base class for auxiliary embeddings."""
 
     @property
     @abstractmethod
@@ -45,7 +45,7 @@ class Embeddings(ABC):
     def get_vector_for_token(self, token: str) -> str: ...
 
 
-class FastTextEmbeddings(Embeddings):
+class FastTextEmbeddings(AuxiliaryEmbeddings):
     """Loads embeddings from a pretrained FastText model from a local path or a url.
 
     Args:
@@ -268,13 +268,13 @@ class FastTextEmbeddings(Embeddings):
         file_path = MODEL_CACHE_DIR / file_name
 
         if file_path.is_file() and not force:
-            logger.info(f"Found existing fasttext model file {file_path}")
+            logger.debug(f"Found existing fasttext model file {file_path}")
             return file_path
 
         with tempfile.TemporaryDirectory() as tempdir:
             gz_file_path = Path(tempdir) / f"{file_name}.gz"
             url = f"https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/{gz_file_path.name}"
-            logger.info(f"Downloading fasttext model file from {url}")
+            logger.debug(f"Downloading fasttext model file from {url}")
 
             with requests.get(url, stream=True) as response:
                 try:
@@ -362,7 +362,7 @@ class FastTextEmbeddings(Embeddings):
         self.model.set_matrices(inp_reduced, out_reduced)
 
 
-class TransformersEmbeddings(Embeddings):
+class TransformersEmbeddings(AuxiliaryEmbeddings):
     """Loads embeddings from a pretrained model from a local path or the HuggingFace Hub.
 
     Loads the specified model and extracts the input embeddings
