@@ -41,7 +41,7 @@ class IdentityWeights(WeightsStrategy):
 
 
 class SoftmaxWeights(WeightsStrategy):
-    def __init__(self, temperature: float = 0.3) -> None:
+    def __init__(self, temperature: float = 1.0) -> None:
         self._epsilon = 1e-7
         self.temperature = temperature + self._epsilon
 
@@ -94,7 +94,8 @@ class SparsemaxWeights(WeightsStrategy):
 
 class TopKWeights(WeightsStrategy):
     """Weight strategy that keeps the top-k highest input scores per row
-    and sets all the other ones to zero.
+    and sets all the other ones to -np.inf in order for them to be ignored in future computations
+    e.g. if this strategy is followed by the softmax strategy then those values become 0.
 
     This implementation method is heavily inspired by the one provided in the following
     stackoverflow answer: https://stackoverflow.com/a/59405060
@@ -105,7 +106,7 @@ class TopKWeights(WeightsStrategy):
         >>> import numpy as np
         >>> weight_strategy = TopKWeights(k=1)
         >>> weight_strategy.apply(np.array([[3, 1, 10]])).tolist()
-        [[0, 0, 10]]
+        [[-np.inf, -np.inf, 10]]
 
     Args:
         k: Number of highest values per row to keep
@@ -115,16 +116,12 @@ class TopKWeights(WeightsStrategy):
         self.k = k
 
     def _compute_weights(self, scores: NDArray) -> NDArray:
-        """ """
-        if scores.ndim != 2:
-            raise ValueError(
-                f"Expected score to have 2 dimensions instead of {scores.ndim}"
-            )
-        # get unsorted indices of top-k values
+        # Get unsorted indices of top-k values
         topk_indices = np.argpartition(scores, -self.k, axis=1)[:, -self.k :]
         rows, _ = np.indices((scores.shape[0], self.k))
         kth_vals = scores[rows, topk_indices].min(axis=1, keepdims=True)
-        # get boolean mask of values smaller than k-th
+        # Get boolean mask of values smaller than k-th
         is_smaller_than_kth = scores < kth_vals
-        weights = np.where(is_smaller_than_kth, 0, scores)
+        # Replace smaller values with -np.inf
+        weights = np.where(is_smaller_than_kth, -np.inf, scores)
         return weights
