@@ -115,7 +115,7 @@ class BilingualDictionaryAlignment(AlignmentStrategy):
                         self.source_word_embeddings.get_id_for_token(src_w)
                     except KeyError:
                         logger.debug(
-                            f"Could not find source embedding id for word '{src_w}'"
+                            "Could not find source embedding id for word '%s'", src_w
                         )
                         continue
 
@@ -124,7 +124,7 @@ class BilingualDictionaryAlignment(AlignmentStrategy):
                         self.target_word_embeddings.get_id_for_token(tgt_w)
                     except KeyError:
                         logger.debug(
-                            f"Could not find target embedding id for word '{tgt_w}'"
+                            "Could not find source embedding id for word '%s'", tgt_w
                         )
                         continue
 
