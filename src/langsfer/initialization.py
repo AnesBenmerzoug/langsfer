@@ -93,18 +93,15 @@ class WeightedAverageEmbeddingsInitialization(EmbeddingInitializer):
             self.source_tokenizer,
             self.source_auxiliary_embeddings,
         )
-        print(f"{source_subword_embeddings.shape=}")
         target_subword_embeddings = self._map_tokens_into_embedding_space(
             self.target_tokenizer,
             self.target_auxiliary_embeddings,
         )
-        print(f"{target_subword_embeddings.shape=}")
 
         # Align source to target
         source_subword_embeddings = self.alignment_strategy.apply(
             source_subword_embeddings
         )
-        print(f"{source_subword_embeddings.shape=}")
 
         # TODO: investigate why this is needed
         source_subword_embeddings /= (
@@ -123,14 +120,11 @@ class WeightedAverageEmbeddingsInitialization(EmbeddingInitializer):
                 self.source_embeddings_matrix.shape[1],
             ),
         ).astype(self.source_embeddings_matrix.dtype)
-        print(f"{target_embeddings_matrix.shape=}")
 
         # Find overlapping and non-overlapping tokens using token overlap strategy
         overlapping_tokens, non_overlapping_tokens = self.token_overlap_strategy.apply(
             self.source_tokenizer, self.target_tokenizer
         )
-        print(f"{len(overlapping_tokens)=}")
-        print(f"{len(non_overlapping_tokens)=}")
 
         # Copy overlapping token embedding vectors
         for token in tqdm(
@@ -162,7 +156,6 @@ class WeightedAverageEmbeddingsInitialization(EmbeddingInitializer):
             # compute weights
             # shape: (batch_size, n_source_tokens)
             weights = self.weights_strategy.apply(similarities)
-            print(f"{weights.shape=}")
 
             # weighted average of source model's overlapping token embeddings
             # with weight from cosine similarity in target token embedding space
@@ -172,7 +165,6 @@ class WeightedAverageEmbeddingsInitialization(EmbeddingInitializer):
             non_overlapping_embedding_vectors = (
                 weights @ self.source_embeddings_matrix / weights_row_sum[:, np.newaxis]
             )
-            print(f"{non_overlapping_embedding_vectors.shape=}")
 
             target_embeddings_matrix[token_batch_ids] = (
                 non_overlapping_embedding_vectors
