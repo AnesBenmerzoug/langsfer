@@ -11,7 +11,7 @@ from tqdm.auto import tqdm
 from langsfer.alignment import AlignmentStrategy, IdentityAlignment
 from langsfer.embeddings import AuxiliaryEmbeddings
 from langsfer.similarity import SimilarityStrategy, CosineSimilarity
-from langsfer.weight import WeightsStrategy, IdentityWeights
+from langsfer.weights import WeightsStrategy, IdentityWeights
 from langsfer.token_overlap import TokenOverlapStrategy, NoTokenOverlap
 
 __all__ = [

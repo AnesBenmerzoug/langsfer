@@ -4,7 +4,7 @@ from hypothesis import given, strategies as st
 from hypothesis.extra import numpy as numpy_st
 from numpy.typing import NDArray
 
-from langsfer.weight import (
+from langsfer.weights import (
     IdentityWeights,
     SoftmaxWeights,
     SparsemaxWeights,
