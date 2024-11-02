@@ -54,9 +54,9 @@ def test_softmax_weights(
     input_scores: NDArray, temperature: float, expected_weights: NDArray
 ):
     weight_strategy = SoftmaxWeights(temperature)
-    np.testing.assert_almost_equal(
-        weight_strategy.apply(input_scores), expected_weights, decimal=2
-    )
+    weights = weight_strategy.apply(input_scores)
+    np.testing.assert_almost_equal(weights, expected_weights, decimal=2)
+    np.testing.assert_allclose(np.sum(weights, axis=1), np.ones(weights.shape[0]))
 
 
 @pytest.mark.parametrize(
@@ -74,21 +74,21 @@ def test_softmax_weights(
 )
 def test_sparsemax_weights(input_scores: NDArray, expected_weights: NDArray):
     weight_strategy = SparsemaxWeights()
-    np.testing.assert_almost_equal(
-        weight_strategy.apply(input_scores), expected_weights, decimal=2
-    )
+    weights = weight_strategy.apply(input_scores)
+    np.testing.assert_almost_equal(weights, expected_weights, decimal=2)
+    np.testing.assert_allclose(np.sum(weights, axis=1), np.ones(weights.shape[0]))
 
 
 @pytest.mark.parametrize(
     "input_scores, k, expected_weights",
     [
-        (np.array([[3, 5, 10]]), 1, np.array([[0, 0, 10]])),
-        (np.array([[3, 5, 10]]), 2, np.array([[0, 5, 10]])),
+        (np.array([[3, 5, 10]]), 1, np.array([[-np.inf, -np.inf, 10]])),
+        (np.array([[3, 5, 10]]), 2, np.array([[-np.inf, 5, 10]])),
         (np.array([[3, 5, 10]]), 3, np.array([[3, 5, 10]])),
         (
             np.array([[3, 5, 10], [100, -1, 11]]),
             2,
-            np.array([[0, 5, 10], [100, 0, 11]]),
+            np.array([[-np.inf, 5, 10], [100, -np.inf, 11]]),
         ),
     ],
 )
