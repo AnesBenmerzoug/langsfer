@@ -13,7 +13,7 @@ from langsfer.initialization import WeightedAverageEmbeddingsInitialization
 from langsfer.alignment import BilingualDictionaryAlignment, IdentityAlignment
 from langsfer.embeddings import TransformersEmbeddings, FastTextEmbeddings
 from langsfer.similarity import CosineSimilarity
-from langsfer.weight import (
+from langsfer.weights import (
     IdentityWeights,
     SoftmaxWeights,
     TopKWeights,
