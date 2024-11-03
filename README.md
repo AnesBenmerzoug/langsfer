@@ -17,13 +17,14 @@
 </p>
 
 Language transfer refers to a few related things:
+
 - initializing a Large Language Model (LLM) in a new, typically low-resource, target language (e.g. German, Arabic)
   from another LLM trained in high-resource source language (e.g. English),
 - extending the vocabulary of an LLM by adding new tokens and initializing their embeddings
   in a manner that allows them to be used with little to no extra training,
 - specializing the vocabulary of a multilingual LLM to one of its supported languages. 
 
-The implemented methods are:
+The library currently implements the following methods:
 
 - [WECHSEL: Effective initialization of subword embeddings for cross-lingual transfer of monolingual language models.](https://arxiv.org/abs/2112.06598) Minixhofer, Benjamin, Fabian Paischer, and Navid Rekabsaz. arXiv preprint arXiv:2112.06598 (2021).
 - [CLP-Transfer: Efficient language model training through cross-lingual and progressive transfer learning.](https://arxiv.org/abs/2301.09626) Ostendorff, Malte, and Georg Rehm. arXiv preprint arXiv:2301.09626 (2023).
@@ -39,6 +40,12 @@ To install the latest stable version from PyPI use:
 pip install langsfer
 ```
 
+To install the latest development version from TestPyPI use:
+
+```shell
+pip install -i https://test.pypi.org/simple/ langsfer
+```
+
 To install the latest development version from the repository use:
 
 ```shell
@@ -47,32 +54,42 @@ cd langsfer
 pip install .
 ```
 
-### WECHSEL
+### Tutorials
+
+The following notebooks serve as tutorials for users of the package:
+
+- [WECHSEL Tutorial](notebooks/WECHSEL_tutorial.ipynb)
+
+### Example
 
 The package provide high-level interfaces to instantiate each of the methods,
 without worrying too much about the package's internals.
 
-For example, to instantiate the WECHSEL method, you would use:
+For example, for the WECHSEL method, you would use:
 
 ```python
 from langsfer.high_level import wechsel
-from langsfer.initialization import WeightedAverageEmbeddingsInitialization
-from langsfer.embeddings import TransformersEmbeddings, FastTextEmbeddings
+from langsfer.embeddings import FastTextEmbeddings
 from langsfer.utils import download_file
 from transformers import AutoTokenizer
 
-source_embeddings = TransformersEmbeddings.from_model_name_or_path("roberta-base")
+source_tokenizer = AutoTokenizer.from_pretrained("roberta-base")
 target_tokenizer = AutoTokenizer.from_pretrained("benjamin/roberta-base-wechsel-german")
-target_auxiliary_embeddings = FastTextEmbeddings.from_model_name_or_path("en")
-source_auxiliary_embeddings = FastTextEmbeddings.from_model_name_or_path("de")
+
+source_model = AutoModel.from_pretrained("roberta-base")
+source_embeddings_matrix = source_model.get_input_embeddings().weight.detach().numpy()
+
+source_auxiliary_embeddings = FastTextEmbeddings.from_model_name_or_path("en")
+target_auxiliary_embeddings = FastTextEmbeddings.from_model_name_or_path("de")
 
 bilingual_dictionary_file = download_file(
-    "https://raw.githubusercontent.com/CPJKU/wechsel/main/dicts/data/swahili.txt",
-    "swahili.txt",
+    "https://raw.githubusercontent.com/CPJKU/wechsel/main/dicts/data/german.txt",
+    "german.txt",
 )
 
 embedding_initializer = wechsel(
-    source_embeddings=source_embeddings,
+    source_tokenizer=source_tokenizer,
+    source_embeddings_matrix=source_embeddings_matrix,
     target_tokenizer=target_tokenizer,
     target_auxiliary_embeddings=target_auxiliary_embeddings,
     source_auxiliary_embeddings=source_auxiliary_embeddings,
@@ -83,7 +100,7 @@ embedding_initializer = wechsel(
 To initialize the target embeddings you would then use:
 
 ```python
-target_embeddings = embedding_initializer.initialize(seed=16, show_progress=True)
+target_embeddings_matrix = embedding_initializer.initialize(seed=16, show_progress=True)
 ```
 
 The result is an object of type `TransformersEmbeddings` that contain the initialized
@@ -92,17 +109,16 @@ embeddings in its `embeddings_matrix` field and the target tokenizer in its `tok
 We can then replace the source model's embeddings matrix with this newly initialized embeddings matrix:
 
 ```python
+import torch
 from transformers import AutoModel
 
-# Load the source model
-source_model = AutoModel.from_pretrained("roberta-base")
-source_model.copy()
+target_model = AutoModel.from_pretrained("roberta-base")
 # Resize its embedding layer
-source_model.resize_token_embeddings(len(target_tokenizer))
+target_model.resize_token_embeddings(len(target_tokenizer))
 # Replace the source embeddings matrix with the target embeddings matrix
-source_model.get_input_embeddings().weight.data = target_embeddings.embeddings_matrix
+target_model.get_input_embeddings().weight.data = torch.as_tensor(target_embeddings_matrix)
 # Save the new model
-source_model.save_pretrained("path/to/target_model")
+target_model.save_pretrained("path/to/target_model")
 ```
 
 ## Contributing

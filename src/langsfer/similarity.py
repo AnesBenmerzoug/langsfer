@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from fastdist.fastdist import cosine_matrix_to_matrix
+from sklearn.metrics.pairwise import cosine_similarity
 from numpy.typing import NDArray
 
 
@@ -14,4 +14,4 @@ class SimilarityStrategy(ABC):
 
 class CosineSimilarity(SimilarityStrategy):
     def apply(self, v: NDArray, w: NDArray) -> NDArray:
-        return cosine_matrix_to_matrix(v, w)
+        return cosine_similarity(v, w)

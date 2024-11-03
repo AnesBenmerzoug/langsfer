@@ -3,40 +3,76 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 import torch
+from more_itertools import chunked
 from numpy.typing import NDArray
 from transformers import PreTrainedTokenizerBase
 from tqdm.auto import tqdm
 
 from langsfer.alignment import AlignmentStrategy, IdentityAlignment
-from langsfer.embeddings import TransformersEmbeddings, FastTextEmbeddings
+from langsfer.embeddings import AuxiliaryEmbeddings
 from langsfer.similarity import SimilarityStrategy, CosineSimilarity
-from langsfer.weight import WeightsStrategy, IdentityWeights
+from langsfer.weights import WeightsStrategy, IdentityWeights
 from langsfer.token_overlap import TokenOverlapStrategy, NoTokenOverlap
 
-__all__ = ["EmbeddingInitializer"]
+__all__ = [
+    "EmbeddingInitializer",
+    "RandomEmbeddingsInitialization",
+    "WeightedAverageEmbeddingsInitialization",
+]
 
 logger = logging.getLogger(__name__)
 
 
 class EmbeddingInitializer(ABC):
     @abstractmethod
-    def initialize(self, *, seed: int | None = None) -> TransformersEmbeddings: ...
+    def initialize(
+        self, *, seed: int | None = None, show_progress: bool = False
+    ) -> NDArray: ...
+
+
+class RandomEmbeddingsInitialization(EmbeddingInitializer):
+    def __init__(
+        self,
+        source_embeddings_matrix: NDArray,
+        target_tokenizer: PreTrainedTokenizerBase,
+    ) -> None:
+        self.source_embeddings_matrix = source_embeddings_matrix
+        self.target_tokenizer = target_tokenizer
+
+    @torch.no_grad()
+    def initialize(
+        self, *, seed: int | None = None, show_progress: bool = False
+    ) -> NDArray:
+        rng = np.random.default_rng(seed)
+        target_embeddings_matrix = rng.normal(
+            np.mean(self.source_embeddings_matrix, axis=0),
+            np.std(self.source_embeddings_matrix, axis=0),
+            (
+                len(self.target_tokenizer),
+                self.source_embeddings_matrix.shape[1],
+            ),
+        ).astype(self.source_embeddings_matrix.dtype)
+
+        return target_embeddings_matrix
 
 
 class WeightedAverageEmbeddingsInitialization(EmbeddingInitializer):
     def __init__(
         self,
-        source_embeddings: TransformersEmbeddings,
+        source_tokenizer: PreTrainedTokenizerBase,
+        source_embeddings_matrix: NDArray,
         target_tokenizer: PreTrainedTokenizerBase,
-        target_auxiliary_embeddings: FastTextEmbeddings,
-        source_auxiliary_embeddings: FastTextEmbeddings | None = None,
+        target_auxiliary_embeddings: AuxiliaryEmbeddings,
+        source_auxiliary_embeddings: AuxiliaryEmbeddings | None = None,
         *,
         alignment_strategy: AlignmentStrategy = IdentityAlignment(),
         similarity_strategy: SimilarityStrategy = CosineSimilarity(),
         weights_strategy: WeightsStrategy = IdentityWeights(),
         token_overlap_strategy: TokenOverlapStrategy = NoTokenOverlap(),
+        batch_size: int = 1024,
     ) -> None:
-        self.source_embeddings = source_embeddings
+        self.source_tokenizer = source_tokenizer
+        self.source_embeddings_matrix = source_embeddings_matrix
         self.target_tokenizer = target_tokenizer
         self.source_auxiliary_embeddings = source_auxiliary_embeddings
         self.target_auxiliary_embeddings = target_auxiliary_embeddings
@@ -44,29 +80,28 @@ class WeightedAverageEmbeddingsInitialization(EmbeddingInitializer):
         self.similarity_strategy = similarity_strategy
         self.weights_strategy = weights_strategy
         self.token_overlap_strategy = token_overlap_strategy
+        self.batch_size = batch_size
 
     @torch.no_grad()
     def initialize(
         self, *, seed: int | None = None, show_progress: bool = False
-    ) -> TransformersEmbeddings:
+    ) -> NDArray:
         rng = np.random.default_rng(seed)
 
         # Map source and target subword tokens to auxiliary token space
-        source_subword_embeddings = (
-            self._map_subword_embeddings_in_word_embedding_space(
-                self.source_main_embeddings._tokenizer,
-                self.source_auxiliary_embeddings,
-            )
+        source_subword_embeddings = self._map_tokens_into_embedding_space(
+            self.source_tokenizer,
+            self.source_auxiliary_embeddings,
         )
-        target_subword_embeddings = (
-            self._map_subword_embeddings_in_word_embedding_space(
-                self.target_tokenizer,
-                self.target_auxiliary_embeddings,
-            )
+        target_subword_embeddings = self._map_tokens_into_embedding_space(
+            self.target_tokenizer,
+            self.target_auxiliary_embeddings,
         )
 
         # Align source to target
-        source_subword_embeddings = self.alignment_strategy(source_subword_embeddings)
+        source_subword_embeddings = self.alignment_strategy.apply(
+            source_subword_embeddings
+        )
 
         # TODO: investigate why this is needed
         source_subword_embeddings /= (
@@ -76,76 +111,81 @@ class WeightedAverageEmbeddingsInitialization(EmbeddingInitializer):
             np.linalg.norm(target_subword_embeddings, axis=1)[:, np.newaxis] + 1e-8
         )
 
-        # Compute weights
-        similarities = self.similarity_strategy(
-            target_subword_embeddings,
-            source_subword_embeddings,
-        )
-        weights = self.weights_strategy(similarities)
-
         # Initialize target embeddings as random
         target_embeddings_matrix = rng.normal(
-            np.mean(self.source_embeddings.embeddings_matrix, axis=0),
-            np.std(self.source_embeddings.embeddings_matrix, axis=0),
+            np.mean(self.source_embeddings_matrix, axis=0),
+            np.std(self.source_embeddings_matrix, axis=0),
             (
-                len(self.target_tokenizer.vocabulary),
-                self.source_main_embeddings.embeddings_matrix.shape[1],
+                len(self.target_tokenizer),
+                self.source_embeddings_matrix.shape[1],
             ),
-        ).astype(self.source_embeddings.embeddings_matrix.dtype)
+        ).astype(self.source_embeddings_matrix.dtype)
 
         # Find overlapping and non-overlapping tokens using token overlap strategy
         overlapping_tokens, non_overlapping_tokens = self.token_overlap_strategy.apply(
-            self.source_embeddings._tokenizer, self.target_tokenizer
+            self.source_tokenizer, self.target_tokenizer
         )
 
         # Copy overlapping token embedding vectors
         for token in tqdm(
             overlapping_tokens, desc="Overlapping Tokens", disable=not show_progress
         ):
+            source_token_id = self.source_tokenizer.convert_tokens_to_ids(token)
             target_token_id = self.target_tokenizer.convert_tokens_to_ids(token)
-            target_embeddings_matrix[target_token_id] = (
-                self.source_embeddings.get_vector_for_token(token)
-            )
-
-        # Compute remaining target embedding vectors
-        # as weighted average of source tokens
-        embedding_vectors = np.average(
-            self.source_embeddings.embeddings_matrix,
-            weights=weights,
-            axis=0,
-            keepdims=True,
-        )
-
-        for token in tqdm(
-            non_overlapping_tokens,
-            desc="Non Overlapping Tokens",
-            disable=not show_progress,
-        ):
-            target_token_id = self.target_tokenizer.convert_tokens_to_ids(token)
-            target_embeddings_matrix[target_token_id] = embedding_vectors[
-                self.source_embeddings.get_id_for_token(token)
+            target_embeddings_matrix[target_token_id] = self.source_embeddings_matrix[
+                source_token_id
             ]
 
-        # Create target embeddings object
-        target_embeddings = TransformersEmbeddings(
-            embeddings_matrix=target_embeddings_matrix,
-            tokenizer=self.target_tokenizer,
+        # Compute target embedding vectors of non overlapping tokens
+        # as weighted average of source tokens
+
+        non_overlapping_token_ids = list(
+            sorted(self.target_tokenizer.convert_tokens_to_ids(non_overlapping_tokens))
         )
-        return target_embeddings
+
+        for token_batch_ids in tqdm(
+            chunked(non_overlapping_token_ids, self.batch_size),
+            desc="Non-Overlapping Tokens",
+            disable=not show_progress,
+        ):
+            # Compute similarities
+            # shape: (batch_size, n_source_tokens)
+            similarities = self.similarity_strategy.apply(
+                target_subword_embeddings[token_batch_ids],
+                source_subword_embeddings,
+            )
+            # compute weights
+            # shape: (batch_size, n_source_tokens)
+            weights = self.weights_strategy.apply(similarities)
+
+            # weighted average of source model's overlapping token embeddings
+            # with weight from cosine similarity in target token embedding space
+            # shape: (batch_size,)
+            weights_row_sum = weights.sum(axis=1)
+            # shape: (batch_size, source_embedding_dim)
+            non_overlapping_embedding_vectors = (
+                weights @ self.source_embeddings_matrix / weights_row_sum[:, np.newaxis]
+            )
+
+            target_embeddings_matrix[token_batch_ids] = (
+                non_overlapping_embedding_vectors
+            )
+
+        return target_embeddings_matrix
 
     @staticmethod
     def _map_tokens_into_embedding_space(
         tokenizer: PreTrainedTokenizerBase,
-        embeddings: FastTextEmbeddings,
+        embeddings: AuxiliaryEmbeddings,
     ) -> NDArray:
         embeddings_matrix = np.zeros(
-            (len(tokenizer.vocabulary), embeddings.embeddings_matrix.shape[1])
+            (len(tokenizer), embeddings.embeddings_matrix.shape[1])
         )
 
-        for i in range(len(tokenizer.vocabulary)):
-            token = tokenizer.get_token_for_id(i)
-
-            # `get_word_vector` returns zeros if not able to decompose
+        for i in range(len(tokenizer)):
+            # Unlike in the WECHSEL code, we use `convert_ids_to_tokens`
+            # instead of `decode` to avoid empty strings
+            token: str = tokenizer.convert_ids_to_tokens(i)
             embeddings_matrix[i] = embeddings.get_vector_for_token(token)
 
         return embeddings_matrix

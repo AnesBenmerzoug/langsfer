@@ -1,6 +1,7 @@
 import gzip
 import logging
 import os
+import tempfile
 import shutil
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -8,18 +9,23 @@ from pathlib import Path
 import numpy as np
 import requests
 from numpy.typing import NDArray
-from transformers import AutoModel, AutoTokenizer, PreTrainedTokenizer, PreTrainedModel
+from transformers import (
+    AutoModel,
+    AutoTokenizer,
+    PreTrainedTokenizerBase,
+    PreTrainedModel,
+)
 from gensim.models.fasttext import FastText, load_facebook_model
 
 from langsfer.constants import MODEL_CACHE_DIR
 
-__all__ = ["FastTextEmbeddings", "TransformersEmbeddings"]
+__all__ = ["AuxiliaryEmbeddings", "FastTextEmbeddings", "TransformersEmbeddings"]
 
 logger = logging.getLogger(__name__)
 
 
-class Embeddings(ABC):
-    """Base class for embeddings."""
+class AuxiliaryEmbeddings(ABC):
+    """Base class for auxiliary embeddings."""
 
     @property
     @abstractmethod
@@ -39,7 +45,7 @@ class Embeddings(ABC):
     def get_vector_for_token(self, token: str) -> str: ...
 
 
-class FastTextEmbeddings(Embeddings):
+class FastTextEmbeddings(AuxiliaryEmbeddings):
     """Loads embeddings from a pretrained FastText model from a local path or a url.
 
     Args:
@@ -218,7 +224,7 @@ class FastTextEmbeddings(Embeddings):
     def from_model_name_or_path(
         cls, model_name_or_path: os.PathLike | str, *, force: bool = False
     ) -> None:
-        if not os.path.exists(model_name_or_path):
+        if os.path.exists(model_name_or_path):
             if Path(model_name_or_path).suffix == ".bin":
                 model = load_facebook_model(model_name_or_path)
             else:
@@ -253,38 +259,36 @@ class FastTextEmbeddings(Embeddings):
         Returns:
             Path to downloaded and extracted model file
         """
-        if language_id not in FastTextEmbeddings.VALID_LANG_IDS:
+        if language_id not in FastTextEmbeddings.VALID_LANGUAGE_IDS:
             raise Exception(
-                f"Invalid lang id. Please select among {FastTextEmbeddings.valid_lang_ids}"
+                f"Invalid lang id. Please select among {FastTextEmbeddings.VALID_LANGUAGE_IDS}"
             )
 
-        file_path = f"cc.{language_id}.300.bin"
-        gz_file_path = MODEL_CACHE_DIR / "{file_name}.gz"
+        file_name = f"cc.{language_id}.300.bin"
+        file_path = MODEL_CACHE_DIR / file_name
 
         if file_path.is_file() and not force:
+            logger.debug(f"Found existing fasttext model file {file_path}")
             return file_path
 
-        if not gz_file_path.is_file() or force:
-            url = (
-                "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/%s"
-                % gz_file_path.name
-            )
-            response = requests.get(url, stream=True)
-            try:
-                response.raise_for_status()
-            except requests.HTTPError as e:
-                raise ValueError(f"Could not download model file from {url}") from e
+        with tempfile.TemporaryDirectory() as tempdir:
+            gz_file_path = Path(tempdir) / f"{file_name}.gz"
+            url = f"https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/{gz_file_path.name}"
+            logger.debug(f"Downloading fasttext model file from {url}")
 
-            with open(file_path, "wb") as f:
-                while True:
-                    chunk = response.read(chunk_size)
-                    if not chunk:
-                        break
-                    f.write(chunk)
+            with requests.get(url, stream=True) as response:
+                try:
+                    response.raise_for_status()
+                except requests.HTTPError as e:
+                    raise ValueError(f"Could not download model file from {url}") from e
 
-        with gzip.open(gz_file_path, "rb") as f:
-            with file_path.open("wb") as f_out:
-                shutil.copyfileobj(f, f_out)
+                with open(gz_file_path, "wb") as f:
+                    for chunk in response.iter_content(chunk_size):
+                        f.write(chunk)
+
+            with gzip.open(gz_file_path, "rb") as f:
+                with file_path.open("wb") as f_out:
+                    shutil.copyfileobj(f, f_out)
 
         return file_path
 
@@ -358,7 +362,7 @@ class FastTextEmbeddings(Embeddings):
         self.model.set_matrices(inp_reduced, out_reduced)
 
 
-class TransformersEmbeddings(Embeddings):
+class TransformersEmbeddings(AuxiliaryEmbeddings):
     """Loads embeddings from a pretrained model from a local path or the HuggingFace Hub.
 
     Loads the specified model and extracts the input embeddings
@@ -369,7 +373,7 @@ class TransformersEmbeddings(Embeddings):
     """
 
     def __init__(
-        self, embeddings_matrix: NDArray, tokenizer: PreTrainedTokenizer
+        self, embeddings_matrix: NDArray, tokenizer: PreTrainedTokenizerBase
     ) -> None:
         self._embeddings_matrix = embeddings_matrix
         self._tokenizer = tokenizer
@@ -387,7 +391,7 @@ class TransformersEmbeddings(Embeddings):
         else:
             embeddings_matrix = TransformersEmbeddings._get_unembedding_matrix(model)
 
-        tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(
+        tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(
             model_name_or_path
         )
         return cls(embeddings_matrix, tokenizer)
@@ -409,8 +413,12 @@ class TransformersEmbeddings(Embeddings):
         return self._embeddings_matrix
 
     @property
+    def tokenizer(self) -> PreTrainedTokenizerBase:
+        return self._tokenizer
+
+    @property
     def vocabulary(self) -> list[str]:
-        tokens = list(self._vocab.keys())
+        tokens = list(self._tokenizer.vocab.keys())
         return tokens
 
     def get_id_for_token(self, token: str) -> int:
