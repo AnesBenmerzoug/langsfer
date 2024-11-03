@@ -145,6 +145,7 @@ class WeightedAverageEmbeddingsInitialization(EmbeddingInitializer):
 
         for token_batch_ids in tqdm(
             chunked(non_overlapping_token_ids, self.batch_size),
+            desc="Non-Overlapping Tokens",
             disable=not show_progress,
         ):
             # Compute similarities
