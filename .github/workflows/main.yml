@@ -59,7 +59,7 @@ jobs:
         python_version: ${{ env.PYTHON_VERSION }}
         poetry_included_groups: dev
     - name: Run pytest
-      run: pytest -vvv
+      run: pytest -vvv --skip-heavy-tests
       timeout-minutes: 20
 
   publish-testpypi:

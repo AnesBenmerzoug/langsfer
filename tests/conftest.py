@@ -3,7 +3,35 @@ from pathlib import Path
 
 import pytest
 import numpy as np
-from pytest import Metafunc
+from pytest import Config, Metafunc
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--skip-heavy-tests",
+        action="store_true",
+        default=False,
+        help="Skips heavy tests. Used in CI",
+    )
+
+
+def pytest_configure(config):
+    config.addinivalue_line(
+        "markers",
+        "heavy: mark test as heavy to run i.e. requiring large resources to run",
+    )
+
+
+def pytest_collection_modifyitems(config: Config, items):
+    if config.getoption("--skip-heavy-tests") is None:
+        # do not skip tests
+        return
+    skip_heavy = pytest.mark.skip(
+        reason="skipping because --skip-heavy-tests was passed"
+    )
+    for item in items:
+        if "heavy" in item.keywords:
+            item.add_marker(skip_heavy)
 
 
 @pytest.fixture(scope="session")
