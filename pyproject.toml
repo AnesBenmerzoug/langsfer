@@ -5,7 +5,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry]
 name = "langsfer"
 version = "0.0.1-dev0"
-description = ""
+description = "A library for language transfer methods and algorithms. "
 authors = ["Anes Benmerzoug <anes.benmerzoug@gmail.com>"]
 license = "LGPL-2.1-only"
 readme = "README.md"
