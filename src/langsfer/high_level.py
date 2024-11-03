@@ -42,9 +42,22 @@ def wechsel(
     k: int = 10,
     batch_size: int = 1024,
 ) -> WeightedAverageEmbeddingsInitialization:
-    """WECHSEL method.
+    """WECHSEL cross-lingual language transfer method.
 
-    Described in [WECHSEL: Effective initialization of subword embeddings for cross-lingual transfer of monolingual language models.](https://arxiv.org/abs/2112.06598) Minixhofer, Benjamin, Fabian Paischer, and Navid Rekabsaz. arXiv preprint arXiv:2112.06598 (2021)
+    Described in [WECHSEL: Effective initialization of subword embeddings for cross-lingual transfer of monolingual language models.](https://arxiv.org/abs/2112.06598) Minixhofer, Benjamin, Fabian Paischer, and Navid Rekabsaz. arXiv preprint arXiv:2112.06598 (2021).
+
+    It is a cross-lingual language transfer method that efficiently initializes the embedding parameters of a language model in a target language using the embedding parameters from an existing model in a source language, facilitating more efficient training in the new language.
+
+    The method requires as input:
+
+    - a tokenizer in the source language,
+    - a pre-trained language model in the source language,
+    - a tokenizer in the target language,
+    - 2 monolingual fastText embeddings for source and target languages respectively.
+      They can be obtained in one of 2 ways:
+
+        - using pre-trained fastText embeddings,
+        - trainining fastText embeddings from scratch.
 
     Args:
         source_tokenizer: Source model's tokenizer
