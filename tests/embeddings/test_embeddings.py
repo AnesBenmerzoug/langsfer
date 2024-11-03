@@ -3,6 +3,7 @@ import pytest
 from langsfer.embeddings import FastTextEmbeddings
 
 
+@pytest.mark.timeout(600)
 @pytest.mark.parametrize(
     "language_id", ["en", pytest.param("123", marks=pytest.mark.xfail)]
 )

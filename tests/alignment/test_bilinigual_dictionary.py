@@ -17,6 +17,7 @@ def fasttext_embeddings_de() -> FastTextEmbeddings:
     return FastTextEmbeddings.from_model_name_or_path("de")
 
 
+@pytest.mark.timeout(600)
 def test_bilingual_dictionary_alignment(
     fasttext_embeddings_en,
     fasttext_embeddings_de: FastTextEmbeddings,
