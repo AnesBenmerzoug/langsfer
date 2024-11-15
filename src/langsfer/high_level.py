@@ -60,16 +60,16 @@ def wechsel(
         - trainining fastText embeddings from scratch.
 
     Args:
-        source_tokenizer: Source model's tokenizer
-        source_embeddings_matrix: Matrix or 2D array containing the weights of the source model's embedding layer
-        target_tokenizer: Target model's tokenizer
-        target_auxiliary_embeddings:
-        source_auxiliary_embeddings:
+        source_tokenizer: Source model's tokenizer.
+        source_embeddings_matrix: Matrix or 2D array containing the weights of the source model's embedding layer.
+        target_tokenizer: Target model's tokenizer.
+        target_auxiliary_embeddings: FastText auxiliary embeddings in the target language.
+        source_auxiliary_embeddings: FastText auxiliary embeddings in the source language.
         bilingual_dictionary: Dictionary mapping words in source language to words in target language.
-        bilingual_dictionary_file: Path to a bilingual dictionary file
-        temperature: Softmax temperature to apply for weight computation
-        k: Number of closest / most similar tokens to consider for weight computation
-        batch_size: Size of the batches of non-overlapping token computations
+        bilingual_dictionary_file: Path to a bilingual dictionary file.
+        temperature: Softmax temperature to apply for weight computation.
+        k: Number of closest / most similar tokens to consider for weight computation.
+        batch_size: Size of the batches of non-overlapping token computations.
     """
     embeddings_initializer = WeightedAverageEmbeddingsInitialization(
         source_tokenizer=source_tokenizer,
@@ -105,12 +105,19 @@ def clp_transfer(
 
     Described in [CLP-Transfer: Efficient language model training through cross-lingual and progressive transfer learning.](https://arxiv.org/abs/2301.09626) Ostendorff, Malte, and Georg Rehm. arXiv preprint arXiv:2301.09626 (2023).
 
+    The method requires as input:
+
+    - a tokenizer in the source language,
+    - a pre-trained language model in the source language,
+    - a tokenizer in the target language,
+    - a helper pre-trained language model in the target language.
+
     Args:
-        source_tokenizer: Source model's tokenizer
-        source_embeddings_matrix: Matrix or 2D array containing the weights of the source model's embedding layer
-        target_tokenizer: Target model's tokenizer
-        target_auxiliary_embeddings:
-        batch_size: Size of the batches of non-overlapping token computations
+        source_tokenizer: Source model's tokenizer.
+        source_embeddings_matrix: Matrix or 2D array containing the weights of the source model's embedding layer.
+        target_tokenizer: Target model's tokenizer.
+        target_auxiliary_embeddings: Auxiliary embeddingsin the target language.
+        batch_size: Size of the batches of non-overlapping token computations.
     """
     embeddings_initializer = WeightedAverageEmbeddingsInitialization(
         source_tokenizer=source_tokenizer,
@@ -140,12 +147,12 @@ def focus(
     Described in [FOCUS: Effective Embedding Initialization for Specializing Pretrained Multilingual Models on a Single Language.](https://arxiv.org/abs/2305.14481) Dobler, Konstantin, and Gerard de Melo. arXiv preprint arXiv:2305.14481 (2023).
 
     Args:
-        source_tokenizer: Source model's tokenizer
-        source_embeddings_matrix: Matrix or 2D array containing the weights of the source model's embedding layer
-        target_tokenizer: Target model's tokenizer
-        target_auxiliary_embeddings:
-        source_auxiliary_embeddings:
-        batch_size: Size of the batches of non-overlapping token computations
+        source_tokenizer: Source model's tokenizer.
+        source_embeddings_matrix: Matrix or 2D array containing the weights of the source model's embedding layer.
+        target_tokenizer: Target model's tokenizer.
+        target_auxiliary_embeddings: FastText auxiliary embeddings in the target language.
+        source_auxiliary_embeddings: FastText auxiliary embeddings in the source language.
+        batch_size: Size of the batches of non-overlapping token computations.
     """
     embeddings_initializer = WeightedAverageEmbeddingsInitialization(
         source_tokenizer=source_tokenizer,
