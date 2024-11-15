@@ -22,7 +22,7 @@ Language transfer refers to a few related things:
   from another LLM trained in high-resource source language (e.g. English),
 - extending the vocabulary of an LLM by adding new tokens and initializing their embeddings
   in a manner that allows them to be used with little to no extra training,
-- specializing the vocabulary of a multilingual LLM to one of its supported languages. 
+- specializing the vocabulary of a multilingual LLM to one of its supported languages.
 
 The library currently implements the following methods:
 
@@ -59,6 +59,7 @@ pip install .
 The following notebooks serve as tutorials for users of the package:
 
 - [WECHSEL Tutorial](notebooks/WECHSEL_tutorial.ipynb)
+- [CLP-Transfer Tutorial](notebooks/CLP_Transfer_tutorial.ipynb)
 
 ### Example
 
@@ -127,11 +128,11 @@ Refer to the [contributing guide](CONTRIBUTING.md) for instructions on you can m
 
 ## Logo
 
-The langsfer logo was created by my good friend [Zakaria Taleb Hacine](https://behance.net/zakariahacine), a 3D artist with 
+The langsfer logo was created by my good friend [Zakaria Taleb Hacine](https://behance.net/zakariahacine), a 3D artist with
 industry experience and a packed portfolio.
 
 The logo contains the latin alphabet letters A and I which are an acronym for Artificial Intelligence and the arabic alphabet letters
-أ and ذ which are an acronym for الذكاء الاصطناعي, which is Artificial Intelligence in arabic.
+أ and ذ which are an acronym for ذكاء اصطناعي, which is Artificial Intelligence in arabic.
 
 The fonts used are [Ethnocentric Regular](https://www.myfonts.com/products/ethnocentric-ethnocentric-970121) and [Readex Pro](https://fonts.google.com/specimen/Readex+Pro).
 
