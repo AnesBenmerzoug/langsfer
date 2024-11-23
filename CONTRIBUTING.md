@@ -1,5 +1,6 @@
 # Quick Start
 
+- Install [Git LFS](https://github.com/git-lfs/git-lfs)
 - Install Python 3.10 (Consider using [pyenv](https://github.com/pyenv/pyenv) for that).
 - Install [Poetry](https://python-poetry.org).
 - Create virtual environment and install dependencies:
