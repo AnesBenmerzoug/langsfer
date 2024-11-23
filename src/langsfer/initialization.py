@@ -1,3 +1,19 @@
+"""This module provides classes for embedding initialization methods used
+in cross-lingual transfer learning and language model specialization.
+
+These classes implement various strategies for initializing the embedding
+layers of target language models based on source language embeddings.
+They provide flexible and efficient ways to transfer knowledge from
+pre-trained models in one language to models in another language.
+
+Classes in this module allow for fine-tuned control over the embedding
+initialization process through several configurable strategies:
+- Alignment strategies (e.g., bilingual dictionaries, identity alignment)
+- Similarity measures (e.g., cosine similarity)
+- Weight computation techniques (e.g., softmax, sparsemax)
+- Token overlap strategies (e.g., exact match, fuzzy match)
+"""
+
 import logging
 from abc import ABC, abstractmethod
 
@@ -24,13 +40,41 @@ logger = logging.getLogger(__name__)
 
 
 class EmbeddingInitializer(ABC):
+    """Abstract base class for initializing embeddings.
+
+    This class serves as the base for various embedding initialization strategies.
+    Subclasses should implement the `initialize` method to compute embeddings based on specific strategies.
+    """
+
     @abstractmethod
     def initialize(
         self, *, seed: int | None = None, show_progress: bool = False
-    ) -> NDArray: ...
+    ) -> NDArray:
+        """Abstract method to initialize the embeddings of target tokens.
+
+        This method should be implemented by subclasses to compute and return embeddings.
+
+        Args:
+            seed: An optional seed for the random number generator.
+            show_progress: If True, displays a progress bar for the initialization process.
+
+        Returns:
+            A 2D array containing the initialized target embeddings.
+        """
+        ...
 
 
 class RandomEmbeddingsInitialization(EmbeddingInitializer):
+    """Random initialization of embeddings using a normal distribution.
+
+    This class initializes embeddings by generating random values based on the mean and
+    standard deviation of the source embeddings.
+
+    Args:
+        source_embeddings_matrix: A 2D array containing the source embeddings matrix.
+        target_tokenizer: A tokenizer for the target language.
+    """
+
     def __init__(
         self,
         source_embeddings_matrix: NDArray,
@@ -43,6 +87,17 @@ class RandomEmbeddingsInitialization(EmbeddingInitializer):
     def initialize(
         self, *, seed: int | None = None, show_progress: bool = False
     ) -> NDArray:
+        """Initialize the target embeddings using random values.
+
+        Generates a random target embeddings matrix based on the mean and standard deviation of the source embeddings matrix.
+
+        Args:
+            seed: An optional seed for the random number generator.
+            show_progress: If True, displays a progress bar for the initialization process.
+
+        Returns:
+            A 2D array containing the randomly initialized target embeddings.
+        """
         rng = np.random.default_rng(seed)
         target_embeddings_matrix = rng.normal(
             np.mean(self.source_embeddings_matrix, axis=0),
@@ -57,6 +112,25 @@ class RandomEmbeddingsInitialization(EmbeddingInitializer):
 
 
 class WeightedAverageEmbeddingsInitialization(EmbeddingInitializer):
+    """Weighted average initialization of embeddings based on source embeddings.
+
+    This class computes the target embeddings by first copying the embeddings of overlapping tokens
+    from the source model and then computing the embeddings of non-overlapping tokens as a weighted
+    average of the source tokens based on similarity.
+
+    Args:
+        source_tokenizer: The tokenizer of the source language.
+        source_embeddings_matrix: A 2D array containing the source embeddings matrix.
+        target_tokenizer: The tokenizer of the target language.
+        target_auxiliary_embeddings: FastText auxiliary embeddings for the target language.
+        source_auxiliary_embeddings: Optional FastText auxiliary embeddings for the source language.
+        alignment_strategy: The strategy used to align source and target embeddings.
+        similarity_strategy: The strategy used to compute token similarities.
+        weights_strategy: The strategy used to compute token weights.
+        token_overlap_strategy: The strategy used to determine token overlap.
+        batch_size: The size of batches for non-overlapping token computations.
+    """
+
     def __init__(
         self,
         source_tokenizer: PreTrainedTokenizerBase,
@@ -86,6 +160,19 @@ class WeightedAverageEmbeddingsInitialization(EmbeddingInitializer):
     def initialize(
         self, *, seed: int | None = None, show_progress: bool = False
     ) -> NDArray:
+        """Initialize target embeddings using weighted averages.
+
+        This method computes the target embeddings by first copying the embeddings of
+        overlapping tokens from the source model and then calculating the embeddings for
+        non-overlapping tokens as a weighted average of source tokens based on cosine similarity.
+
+        Args:
+            seed: An optional seed for the random number generator.
+            show_progress: If True, displays a progress bar for the initialization process.
+
+        Returns:
+            A 2D array containing the initialized target embeddings.
+        """
         rng = np.random.default_rng(seed)
 
         # Initialize target embeddings as random
@@ -138,6 +225,20 @@ class WeightedAverageEmbeddingsInitialization(EmbeddingInitializer):
         *,
         show_progress: bool = False,
     ) -> NDArray:
+        """Compute embeddings for non-overlapping tokens as weighted averages.
+
+        This method calculates the embeddings for non-overlapping target tokens based on a weighted
+        average of the source embeddings, using cosine similarity to determine the weights.
+
+        Args:
+            overlapping_target_token_ids: List of token IDs for overlapping target tokens.
+            overlapping_source_token_ids: List of token IDs for overlapping source tokens.
+            non_overlapping_target_token_ids: List of token IDs for non-overlapping target tokens.
+            show_progress: If True, displays a progress bar for the initialization process.
+
+        Returns:
+            A 2D array containing the embeddings for the non-overlapping target tokens.
+        """
         # Map source and target subword tokens to auxiliary token space
         target_subword_embeddings = self._map_tokens_into_auxiliary_embedding_space(
             self.target_tokenizer,
@@ -212,6 +313,22 @@ class WeightedAverageEmbeddingsInitialization(EmbeddingInitializer):
         tokenizer: PreTrainedTokenizerBase,
         embeddings: AuxiliaryEmbeddings,
     ) -> NDArray:
+        """Map tokens into the auxiliary embedding space.
+
+        This method converts token IDs from a tokenizer into their corresponding vector
+        representations in an auxiliary embedding space. The embeddings are retrieved
+        from the provided auxiliary embeddings source.
+
+        Args:
+            tokenizer: A pre-trained tokenizer.
+            embeddings: An object containing the auxiliary embeddings, which provides
+                vector representations for tokens.
+
+        Returns:
+            A 2D array of shape (n_tokens, embedding_dim),
+            where each row corresponds to the embedding of a token from the tokenizer
+            in the auxiliary embedding space.
+        """
         embeddings_matrix = np.zeros(
             (len(tokenizer), embeddings.embeddings_matrix.shape[1])
         )
