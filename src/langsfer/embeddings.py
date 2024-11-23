@@ -49,10 +49,9 @@ class FastTextEmbeddings(AuxiliaryEmbeddings):
     """Loads embeddings from a pretrained FastText model from a local path or a url.
 
     Args:
-        model_name_or_path: Name or path of model to load.
+        model: FastText model.
 
     Attributes:
-        model_name_or_path: Name or path of model.
         model: FastText model.
     """
 

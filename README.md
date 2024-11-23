@@ -59,7 +59,8 @@ pip install .
 The following notebooks serve as tutorials for users of the package:
 
 - [WECHSEL Tutorial](notebooks/WECHSEL_tutorial.ipynb)
-- [CLP-Transfer Tutorial](notebooks/CLP_Transfer_tutorial.ipynb)
+- [CLP-Transfer Tutorial](notebooks/CLPT_tutorial.ipynb)
+- [FOCUS Tutorial](notebooks/FOCUS_tutorial.ipynb)
 
 ### Example
 

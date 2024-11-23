@@ -2,11 +2,13 @@ import functools
 import os
 import shutil
 from pathlib import Path
+from typing import Iterable
 
 import requests
+from gensim.models import FastText
 from tqdm.auto import tqdm
 
-__all__ = ["download_file"]
+__all__ = ["download_file", "train_fasttext_model"]
 
 
 def download_file(
@@ -36,3 +38,32 @@ def download_file(
             shutil.copyfileobj(r_raw, f)
 
     return destination_path
+
+
+def train_fasttext_model(
+    corpus_iterable: Iterable[list[str]],
+    *,
+    total_examples: int,
+    vector_size: int = 300,
+    window: int = 3,
+    min_count: int = 10,
+    epochs: int = 3,
+) -> FastText:
+    """Trains a FastText model.
+
+    Args:
+        corpus_iterable: Iterator of lists of tokens (tokenized sentences) used as training data.
+        total_examples : Count of sentences.
+        vector_size : Dimensionality of the word vectors.
+        window : The maximum distance between the current and predicted word within a sentence.
+        min_count : The model ignores all words with total frequency lower than this.
+        epochs : Number of iterations (epochs) over the corpus.
+    """
+    model = FastText(vector_size=vector_size, window=window, min_count=min_count)
+    model.build_vocab(corpus_iterable=corpus_iterable)
+    model.train(
+        corpus_iterable=corpus_iterable,
+        total_examples=total_examples,
+        epochs=epochs,
+    )
+    return model
