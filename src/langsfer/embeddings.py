@@ -1,3 +1,8 @@
+"""
+This module provides classes and methods for working with various types of token embeddings,
+including FastText and Transformer-based embeddings.
+"""
+
 import gzip
 import logging
 import os
@@ -25,34 +30,85 @@ logger = logging.getLogger(__name__)
 
 
 class AuxiliaryEmbeddings(ABC):
-    """Base class for auxiliary embeddings."""
+    """Abstract base class for auxiliary token embeddings.
+
+    This class defines common methods for any embedding source, such as retrieving
+    the embeddings matrix, vocabulary, and specific token (character, subword, word) operations (e.g., token-to-ID,
+    ID-to-token, token-to-vector).
+
+    Subclasses should implement the methods to provide specific functionality for
+    different embedding models (e.g., FastText, Transformers).
+    """
 
     @property
     @abstractmethod
-    def embeddings_matrix(self) -> NDArray: ...
+    def embeddings_matrix(self) -> NDArray:
+        """Returns the matrix of embeddings.
+
+        Returns:
+            2D array where each row represents the embedding of a token in the vocabulary.
+        """
+        ...
 
     @property
     @abstractmethod
-    def vocabulary(self) -> list[str]: ...
+    def vocabulary(self) -> list[str]:
+        """Returns the vocabulary of the embeddings.
+
+        Returns:
+            List of tokens in the vocabulary corresponding to the embeddings.
+        """
+        ...
 
     @abstractmethod
-    def get_id_for_token(self, token: str) -> int: ...
+    def get_id_for_token(self, token: str) -> int:
+        """Retrieves the index (ID) for the given token.
+
+        Args:
+            token: The token whose ID is to be retrieved.
+
+        Returns:
+            ID corresponding to the token.
+        """
+        ...
 
     @abstractmethod
-    def get_token_for_id(self, id_: int) -> str: ...
+    def get_token_for_id(self, id_: int) -> str:
+        """Retrieves the token corresponding to the given ID.
+
+        Args:
+            id_: ID whose corresponding token is to be retrieved.
+
+        Returns:
+            Token corresponding to the ID.
+        """
+        ...
 
     @abstractmethod
-    def get_vector_for_token(self, token: str) -> str: ...
+    def get_vector_for_token(self, token: str) -> str:
+        """Retrieves the embedding vector for the given token.
+
+        Args:
+            token: Tord whose embedding vector is to be retrieved.
+
+        Returns:
+            Vector corresponding to the token.
+        """
+        ...
 
 
 class FastTextEmbeddings(AuxiliaryEmbeddings):
-    """Loads embeddings from a pretrained FastText model from a local path or a url.
+    """Class for loading and working with FastText embeddings.
+
+    This class allows you to load pre-trained FastText embeddings either from a local file
+    or by downloading them from the FastText website. It provides functionality to access
+    the embeddings matrix, vocabulary, and individual token embeddings.
+
+    FastText embeddings are useful for handling subword information, which is beneficial
+    for morphologically rich languages or words that are out of vocabulary (OOV).
 
     Args:
-        model: FastText model.
-
-    Attributes:
-        model: FastText model.
+        model: A pre-trained FastText model loaded using Gensim.
     """
 
     VALID_LANGUAGE_IDS = {
@@ -223,6 +279,18 @@ class FastTextEmbeddings(AuxiliaryEmbeddings):
     def from_model_name_or_path(
         cls, model_name_or_path: os.PathLike | str, *, force: bool = False
     ) -> None:
+        """Loads a FastText model from a local path or from a FastText website URL.
+
+        If a valid language ID is provided, the model will be downloaded from FastText's
+        website. Otherwise, a model from the specified local path is loaded.
+
+        Args:
+            model_name_or_path: The name or path of the model to load.
+            force: If True, forces the re-download of the model even if it exists locally.
+
+        Returns:
+            An instance of the FastTextEmbeddings class with the loaded model.
+        """
         if os.path.exists(model_name_or_path):
             if Path(model_name_or_path).suffix == ".bin":
                 model = load_facebook_model(model_name_or_path)
@@ -243,20 +311,23 @@ class FastTextEmbeddings(AuxiliaryEmbeddings):
     def _download_model(
         language_id: str, *, force: bool = False, chunk_size: int = 2**13
     ) -> Path:
-        """Download pre-trained common-crawl vectors from fastText's website
+        """Download pre-trained common-crawl vectors from fastText's website.
+
         https://fasttext.cc/docs/en/crawl-vectors.html
+
+        The model is cached locally to avoid re-downloading in the future.
 
         Original code from:
         https://github.com/facebookresearch/fastText/blob/02c61efaa6d60d6bb17e6341b790fa199dfb8c83/python/fasttext_module/fasttext/util/util.py#L183
         License: [MIT](https://github.com/facebookresearch/fastText/blob/02c61efaa6d60d6bb17e6341b790fa199dfb8c83/LICENSE)
 
         Args:
-            language_id: String representing the ID of the language, e.g. "ar", for which the model will be downloaded
-            force: If True, overwrite cached files
-            chunk_size:
+            language_id: String representing the language ID (e.g. "ar", "en") of the model to download.
+            force: If True, forces re-downloading the model even if it exists locally.
+            chunk_size: The size of the chunks to download at a time.
 
         Returns:
-            Path to downloaded and extracted model file
+            Path to downloaded and extracted FastText model file
         """
         if language_id not in FastTextEmbeddings.VALID_LANGUAGE_IDS:
             raise Exception(
@@ -293,29 +364,63 @@ class FastTextEmbeddings(AuxiliaryEmbeddings):
 
     @property
     def embeddings_matrix(self) -> NDArray:
+        """Returns the embeddings matrix of the loaded FastText model.
+
+        Returns:
+            2D array containing the embeddings for each token in the vocabulary.
+        """
         return self._model.wv.vectors
 
     @property
     def vocabulary(self) -> list[str]:
+        """Returns the vocabulary of the FastText model.
+
+        Returns:
+            lList of tokens in the model's vocabulary.
+        """
         tokens: list[str] = list(self._model.wv.key_to_index.keys())
         return tokens
 
     def get_id_for_token(self, token: str) -> int:
+        """Retrieves the index (ID) for the given token in the FastText model.
+
+        Args:
+            token: Tord whose ID is to be retrieved.
+
+        Returns:
+            The ID corresponding to the token.
+        """
         return self._model.wv.get_index(token)
 
     def get_token_for_id(self, id_: int) -> str:
+        """Retrieves the token corresponding to the given ID.
+
+        Args:
+            id_: ID whose corresponding token is to be retrieved.
+
+        Returns:
+            Token corresponding to the ID.
+        """
         return self._model.wv.index_to_key[id_]
 
-    def get_vector_for_token(self, token: str) -> str:
+    def get_vector_for_token(self, token: str) -> NDArray:
+        """Retrieves the embedding vector for the given token in the FastText model.
+
+        Args:
+            token: Token whose embedding vector is to be retrieved.
+
+        Returns:
+            Embedding vector corresponding to the token.
+        """
         return self._model.wv.get_vector(token)
 
     @staticmethod
     def _reduce_matrix(
-        X_orig: NDArray, dim: int, eigv: NDArray | None
+        X_orig: NDArray, dim: int, eigv: NDArray | None = None
     ) -> tuple[NDArray, NDArray]:
-        """
-        Reduces the dimension of a `(m, n)` matrix `X_orig`
-        to a `(m, dim)` matrix `X_reduced`.
+        """Reduces the dimensionality of the FastText embeddings matrix using PCA.
+
+        Reduces the dimension of a `(m, n)` matrix `X_orig` to a `(m, dim)` matrix `X_reduced` using PCA.
 
         It uses only the first 100000 rows of `X_orig` to do the mapping.
         Matrix types are all `np.float32` in order to avoid unncessary copies.
@@ -325,6 +430,14 @@ class FastTextEmbeddings(AuxiliaryEmbeddings):
 
         MIT License:
         https://github.com/facebookresearch/fastText/blob/02c61efaa6d60d6bb17e6341b790fa199dfb8c83/LICENSE
+
+        Args:
+            X_orig: Original matrix of embeddings.
+            dim: Target dimensionality after reduction.
+            eigv: Optional eigenvector matrix, used for dimension reduction.
+
+        Returns:
+            Tuple containing the reduced matrix and the eigenvector matrix.
         """
         if eigv is None:
             mapping_size = 100000
@@ -339,8 +452,9 @@ class FastTextEmbeddings(AuxiliaryEmbeddings):
         return (X_reduced, eigv)
 
     def reduce_model_dimension(self, target_dim: int) -> None:
-        """Computes the PCA of the input and the output matrices
-        and sets the reduced ones.
+        """Reduces the dimensionality of the FastText model using PCA.
+
+        This method adjusts both the input and output matrices of the model to the target dimension.
 
         Original code taken from:
         https://github.com/facebookresearch/fastText/blob/02c61efaa6d60d6bb17e6341b790fa199dfb8c83/python/fasttext_module/fasttext/util/util.py
@@ -362,13 +476,15 @@ class FastTextEmbeddings(AuxiliaryEmbeddings):
 
 
 class TransformersEmbeddings(AuxiliaryEmbeddings):
-    """Loads embeddings from a pretrained model from a local path or the HuggingFace Hub.
+    """Class for loading and working with Transformer-based model embeddings.
 
-    Loads the specified model and extracts the input embeddings
-    weights as a numpy array.
+    This class allows you to load pre-trained embeddings from transformer-based models
+    (such as BERT, GPT, etc.) from the HuggingFace model hub or a local path. It provides
+    functionality to access the embeddings matrix, vocabulary, and individual token embeddings.
 
     Args:
-        model_name_or_path: Name or path of model to load.
+        embeddings_matrix: Embeddings matrix as a NumPy array.
+        tokenizer: Tokenizer associated with the embeddings.
     """
 
     def __init__(
@@ -381,6 +497,18 @@ class TransformersEmbeddings(AuxiliaryEmbeddings):
     def from_model_name_or_path(
         cls, model_name_or_path: os.PathLike | str, *, trust_remote_code: bool = False
     ) -> "TransformersEmbeddings":
+        """Loads a transformer model and extracts its embeddings matrix.
+
+        The method supports models from HuggingFace's model hub and local paths. It also
+        loads the corresponding tokenizer.
+
+        Args:
+            model_name_or_path: The model's name or local path.
+            trust_remote_code: Whether to trust code from the remote model.
+
+        Returns:
+            An instance of the TransformersEmbeddings class.
+        """
         model = AutoModel.from_pretrained(
             model_name_or_path, trust_remote_code=trust_remote_code
         )
@@ -409,6 +537,11 @@ class TransformersEmbeddings(AuxiliaryEmbeddings):
 
     @property
     def embeddings_matrix(self) -> NDArray:
+        """Returns the embeddings matrix from the transformer model.
+
+        Returns:
+            2D array of embeddings for each token in the vocabulary.
+        """
         return self._embeddings_matrix
 
     @property
@@ -417,15 +550,44 @@ class TransformersEmbeddings(AuxiliaryEmbeddings):
 
     @property
     def vocabulary(self) -> list[str]:
+        """Returns the vocabulary of the tokenizer.
+
+        Returns:
+            List of tokens in the tokenizer's vocabulary.
+        """
         tokens = list(self._tokenizer.vocab.keys())
         return tokens
 
     def get_id_for_token(self, token: str) -> int:
+        """Retrieves the token ID for a given token using the tokenizer.
+
+        Args:
+            token: Tord whose ID is to be retrieved.
+
+        Returns:
+            The ID corresponding to the token.
+        """
         return self._tokenizer.convert_tokens_to_ids(token)
 
     def get_token_for_id(self, id_: int) -> str:
+        """Retrieves the token corresponding to a given ID using the tokenizer.
+
+        Args:
+            id_: ID whose corresponding token is to be retrieved.
+
+        Returns:
+            The token corresponding to the ID.
+        """
         return self._tokenizer.decode(id_).strip()
 
     def get_vector_for_token(self, token: str) -> str:
+        """Retrieves the embedding vector for the given token using the model.
+
+        Args:
+            token: Token whose embedding vector is to be retrieved.
+
+        Returns:
+            Embedding vector corresponding to the token.
+        """
         id_ = self.get_id_for_token(token)
         return self._embeddings_matrix[id_]
