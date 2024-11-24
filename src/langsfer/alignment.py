@@ -1,3 +1,8 @@
+"""This module provides strategies for aligning embedding matrices using different techniques.
+
+The `AlignmentStrategy` class is an abstract base class that defines the interface for embedding alignment strategies.
+"""
+
 import logging
 import os
 import warnings
@@ -16,17 +21,46 @@ logger = logging.getLogger(__name__)
 
 
 class AlignmentStrategy(ABC):
+    """Abstract base class for defining strategies to align embedding matrices.
+
+    Subclasses must implement the `apply` method to define the logic for aligning
+    the embedding matrix based on their specific alignment technique.
+    """
+
     @abstractmethod
     def apply(self, embedding_matrix: NDArray) -> NDArray: ...
 
 
 class IdentityAlignment(AlignmentStrategy):
+    """Alignment strategy that does not alter the input embedding matrix.
+
+    This strategy simply returns the input embedding matrix unchanged.
+
+    Example:
+        >>> identity_alignment = IdentityAlignment()
+        >>> aligned_embeddings = identity_alignment.apply(embedding_matrix)
+        >>> # aligned_embeddings will be the same as embedding_matrix
+    """
+
     def apply(self, embedding_matrix: NDArray) -> NDArray:
+        """Returns the input embedding matrix unchanged.
+
+        Args:
+            embedding_matrix: 2D embedding matrix to be aligned.
+
+        Returns:
+            The same embedding matrix as the output, without any modifications.
+        """
         return embedding_matrix
 
 
 class BilingualDictionaryAlignment(AlignmentStrategy):
     """Alignment strategy that uses a bilingual dictionary to compute the alignment matrix.
+
+    This strategy uses word pairs from a bilingual dictionary to compute an alignment
+    matrix between the source and target embedding matrices. The dictionary maps words in the
+    source language to words in the target language. The alignment matrix is computed by
+    applying orthogonal Procrustes analysis to the word vector correspondences.
 
     The bilingual dictionary maps words in the source language to words in the target language
     and is expected to be of the form:
@@ -39,10 +73,10 @@ class BilingualDictionaryAlignment(AlignmentStrategy):
     ```
 
     Args:
-        source_word_embeddings: Word embeddings of the source language
-        target_word_embeddings: Word embeddings of the target language
-        bilingual_dictionary: Dictionary mapping words in source language to words in target language
-        bilingual_dictionary_file: Path to a bilingual dictionary file
+        source_word_embeddings: Word embeddings of the source language.
+        target_word_embeddings: Word embeddings of the target language.
+        bilingual_dictionary: Dictionary mapping words in source language to words in target language.
+        bilingual_dictionary_file: Path to a bilingual dictionary file containing word pairs.
     """
 
     def __init__(
@@ -75,6 +109,23 @@ class BilingualDictionaryAlignment(AlignmentStrategy):
     def _load_bilingual_dictionary(
         file_path: str | os.PathLike,
     ) -> dict[str, list[str]]:
+        """Loads a bilingual dictionary from a file.
+
+        The file is expected to contain word pairs, one per line, separated by tabs, e.g.:
+
+        ```
+        english_word1 \t target_word1\n
+        english_word2 \t target_word2\n
+        ...
+        english_wordn \t target_wordn\n
+        ```
+
+        Args:
+            file_path: Path to the bilingual dictionary file.
+
+        Returns:
+            A dictionary where the keys are source language words, and the values are lists of target language words.
+        """
         bilingual_dictionary: dict[str, list[str]] = {}
 
         for line in open(file_path):
@@ -91,6 +142,15 @@ class BilingualDictionaryAlignment(AlignmentStrategy):
         return bilingual_dictionary
 
     def _compute_alignment_matrix(self) -> NDArray:
+        """Computes the alignment matrix using the bilingual dictionary.
+
+        The method iterates over the bilingual dictionary, retrieving word vector correspondences from the
+        source and target language embeddings. It uses orthogonal Procrustes analysis to compute the
+        transformation matrix that aligns the source word embeddings with the target word embeddings.
+
+        Returns:
+            A 2D array representing the alignment matrix.
+        """
         logger.info(
             "Computing word embedding alignment matrix from bilingual dictionary"
         )
@@ -145,6 +205,17 @@ class BilingualDictionaryAlignment(AlignmentStrategy):
         return alignment_matrix
 
     def apply(self, embedding_matrix: NDArray) -> NDArray:
+        """Applies the computed alignment matrix to the given embedding matrix.
+
+        The embedding matrix is transformed by multiplying it with the alignment matrix
+        obtained from the bilingual dictionary.
+
+        Args:
+            embedding_matrix: 2D embedding matrix to be aligned.
+
+        Returns:
+            Aligned embedding matrix.
+        """
         alignment_matrix = self._compute_alignment_matrix()
         aligned_embedding_matrix = embedding_matrix @ alignment_matrix
         return aligned_embedding_matrix

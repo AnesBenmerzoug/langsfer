@@ -2,6 +2,8 @@
 into weights that are used to compute target embedding vectors as weighted averages.
 The strategies are designed to modify the input scores based on different
 criteria, such as ranking, sparsity, or normalization.
+
+The `WeightsStrategy` class is an abstract base class that defines the interface for weight strategies.
 """
 
 from abc import ABC, abstractmethod
