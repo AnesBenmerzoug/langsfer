@@ -64,12 +64,12 @@ The following notebooks serve as tutorials for users of the package:
 - [CLP-Transfer Tutorial](notebooks/CLPT_tutorial.ipynb)
 - [FOCUS Tutorial](notebooks/FOCUS_tutorial.ipynb)
 
-### Example
+### Simple Example
 
 The package provide high-level interfaces to instantiate each of the methods,
 without worrying too much about the package's internals.
 
-For example, for the WECHSEL method, you would use:
+For example, to use the WECHSEL method, you would use:
 
 ```python
 from langsfer.high_level import wechsel
@@ -124,6 +124,41 @@ target_model.get_input_embeddings().weight.data = torch.as_tensor(target_embeddi
 # Save the new model
 target_model.save_pretrained("path/to/target_model")
 ```
+
+### Advanced Example
+
+Langsfer also provides lower-level interfaces to allow you
+to tweak many of the components of the embedding initialiation.
+You however have to know a bit more about the package's internals.
+
+For example, if you want use to replace the WECHSEL method's weight strategy and token overlap strategy
+with Sparsemax and Fuzzy token overalp, respectively, you would use:
+
+```python
+from langsfer.initialization import WeightedAverageEmbeddingsInitialization
+from langsfer.alignment import BilingualDictionaryAlignment
+from langsfer.embeddings import FastTextEmbeddings
+from langsfer.weights import SparsemaxWeights
+from langsfer.token_overlap import FuzzyMatchTokenOverlap
+
+embeddings_initializer = WeightedAverageEmbeddingsInitialization(
+  source_tokenizer=source_tokenizer,
+  source_embeddings_matrix=source_embeddings_matrix,
+  target_tokenizer=target_tokenizer,
+  target_auxiliary_embeddings=target_auxiliary_embeddings,
+  source_auxiliary_embeddings=source_auxiliary_embeddings,
+  alignment_strategy=BilingualDictionaryAlignment(
+      source_auxiliary_embeddings,
+      target_auxiliary_embeddings,
+      bilingual_dictionary_file=bilingual_dictionary_file,
+  ),
+  weights_strategy=SprasemaxWeights(),
+  token_overlap_strategy=FuzzyMatchTokenOverlap(),
+)
+```
+
+You could even implement your own strategies for token overlap computation, embedding alignement,
+similarity score compuation and weight computation.
 
 ## Roadmap
 
