@@ -30,6 +30,8 @@ The library currently implements the following methods:
 - [CLP-Transfer: Efficient language model training through cross-lingual and progressive transfer learning.](https://arxiv.org/abs/2301.09626) Ostendorff, Malte, and Georg Rehm. arXiv preprint arXiv:2301.09626 (2023).
 - [FOCUS: Effective Embedding Initialization for Specializing Pretrained Multilingual Models on a Single Language.](https://arxiv.org/abs/2305.14481) Dobler, Konstantin, and Gerard de Melo. arXiv preprint arXiv:2305.14481 (2023).
 
+Langsfer is flexible enough to allow mixing and matching strategies between different embedding initialization schemes. For example, you can combine fuzzy token overlap with the CLP-Transfer method to refine the initialization process based on fuzzy matches between source and target tokens. This flexibility enables you to experiment with a variety of strategies for different language transfer tasks, making it easier to fine-tune models for your specific use case.
+
 ## Quick Start
 
 ### Installation
@@ -79,6 +81,7 @@ source_tokenizer = AutoTokenizer.from_pretrained("roberta-base")
 target_tokenizer = AutoTokenizer.from_pretrained("benjamin/roberta-base-wechsel-german")
 
 source_model = AutoModel.from_pretrained("roberta-base")
+# For models with non-tied embeddings you can choose whether you should transfer the input and output embeddings separately.
 source_embeddings_matrix = source_model.get_input_embeddings().weight.detach().numpy()
 
 source_auxiliary_embeddings = FastTextEmbeddings.from_model_name_or_path("en")
@@ -105,8 +108,7 @@ To initialize the target embeddings you would then use:
 target_embeddings_matrix = embedding_initializer.initialize(seed=16, show_progress=True)
 ```
 
-The result is an object of type `TransformersEmbeddings` that contain the initialized
-embeddings in its `embeddings_matrix` field and the target tokenizer in its `tokenizer` field.
+The result is a 2D arrays that contains the initialized embeddings matrix for the target language model.
 
 We can then replace the source model's embeddings matrix with this newly initialized embeddings matrix:
 
@@ -122,6 +124,30 @@ target_model.get_input_embeddings().weight.data = torch.as_tensor(target_embeddi
 # Save the new model
 target_model.save_pretrained("path/to/target_model")
 ```
+
+## Roadmap
+
+Here are some of the planned developments for Langsfer:
+
+- **Performance Optimization**: Improve the efficiency and usability of the library to streamline workflows
+  and improve computational performance.
+
+- **Model Training & Hugging Face Hub Publishing**: Train both small and large models with embeddings initialized using Langsfer
+  and publish the resulting models to the Hugging Face Hub for public access and use.
+
+- **Parameter-Efficient Fine-Tuning**: Investigate using techniques such as LoRA (Low-Rank Adaptation)
+  to enable parameter-efficient fine-tuning, making it easier to adapt models to specific languages with minimal overhead.
+
+- **Implement New Methods**: Extend Langsfer with additional language transfer methods, including:
+
+  - [Ofa: A framework of initializing unseen subword embeddings for efficient large-scale multilingual continued pretraining.](https://arxiv.org/abs/2311.08849)
+    Liu, Y., Lin, P., Wang, M. and Schütze, H., 2023. arXiv preprint arXiv:2311.08849.
+  - [Zero-Shot Tokenizer Transfer.](https://arxiv.org/abs/2405.07883)
+    Minixhofer, B., Ponti, E.M. and Vulić, I., 2024. arXiv preprint arXiv:2405.07883.
+
+- **Comprehensive Benchmarking**: Run extensive benchmarks across all implemented methods to evaluate their performance, identify strengths
+  and weaknesses, and compare results to establish best practices for language transfer.
+
 
 ## Contributing
 
