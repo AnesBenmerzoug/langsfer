@@ -58,6 +58,9 @@ def train_fasttext_model(
         window : The maximum distance between the current and predicted word within a sentence.
         min_count : The model ignores all words with total frequency lower than this.
         epochs : Number of iterations (epochs) over the corpus.
+
+    Returns:
+        Trained FastText model.
     """
     model = FastText(vector_size=vector_size, window=window, min_count=min_count)
     model.build_vocab(corpus_iterable=corpus_iterable)
