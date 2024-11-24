@@ -1,0 +1,72 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types:
+    - published
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: Why did you trigger the pipeline?
+        required: False
+        default: Check if it runs again due to external changes
+      tag_name:
+        description: The name of the tag for which a package should be published
+        type: string
+        required: true
+
+
+env:
+  GITHUB_BOT_USERNAME: github-actions[bot]
+  GITHUB_BOT_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+  PY_COLORS: 1
+  PYTHON_VERSION: '3.11'
+  PACKAGE_NAME: 'langsfer'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  publish-pypi:
+    name: Publish package to PyPI
+    runs-on: ubuntu-latest
+    concurrency:
+      group: publish-pypi
+    permissions:
+      id-token: write
+    environment:
+      name: pypi
+    steps:
+      - name: Checking out last commit in release
+        if: ${{ github.event_name != 'workflow_dispatch' }}
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          fetch-depth: 0
+      - name: Checking out last commit for tag ${{ inputs.tag_name }}
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag_name }}
+          lfs: true
+          fetch-depth: 0
+        
+      - name: Setup Virtual Environment
+        uses: ./.github/actions/poetry
+        with:
+          python_version: ${{ env.PYTHON_VERSION }}
+          poetry_included_groups: dev
+      
+      - name: Build Package
+        run: |
+          set -x
+          CURRENT_VERSION=$(bump-my-version show current_version)
+          echo "Building package version ${CURRENT_VERSION}!"
+          poetry build --format=wheel
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          print-hash: true
+          verbose: true
