@@ -59,7 +59,7 @@ Use the `--dry-run` flag at first with each command to confirm that the changes 
 2. Switch from development to release version, commit the change and create a tag:
 
    ```shell
-   bump-my-version bump --verbose --commit --tag --sign-tags pre_l
+   bump-my-version bump --verbose --commit --tag pre_l
    ```
 
    This will:
