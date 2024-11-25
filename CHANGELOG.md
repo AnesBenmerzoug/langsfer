@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 ## 0.1.0 - 🎉 first release
 
 This is very first release of Langsfer.
