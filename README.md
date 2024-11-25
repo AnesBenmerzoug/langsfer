@@ -6,13 +6,19 @@
 </p>
 <p align="center">
   <a href="https://github.com/AnesBenmerzoug/langsfer/actions?query=event%3Apush+branch%3Amain" target="_blank">
-    <img src="https://github.com/AnesBenmerzoug/langsfer/actions/workflows/main.yml/badge.svg?event=push&branch=main" alt="CI">
+    <img src="https://github.com/AnesBenmerzoug/langsfer/actions/workflows/main.yml/badge.svg?event=push&branch=main" alt="Main CI Workflow Status">
+  </a>
+  <a href="https://pypi.org/project/langsfer">
+    <img alt="PyPI - Version" src="https://img.shields.io/pypi/v/langsfer?style=flat&logo=pypi&logoColor=white&label=PyPI&color=blue">
   </a>
   <a href="https://test.pypi.org/project/langsfer/">
-    <img alt="TestPyPI Version" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Ftest.pypi.org%2Fpypi%2Flangsfer%2Fjson&query=%24.info.version&prefix=v&logo=pypi&logoColor=white&label=TestPyPI&link=https%3A%2F%2Ftest.pypi.org%2Fproject%2Flangsfer%2F">
+    <img alt="TestPyPI - Version" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Ftest.pypi.org%2Fpypi%2Flangsfer%2Fjson&query=%24.info.version&prefix=v&logo=pypi&logoColor=white&label=TestPyPI&link=https%3A%2F%2Ftest.pypi.org%2Fproject%2Flangsfer%2F">
   </a>
   <a href="https://github.com/AnesBenmerzoug/langsfer/blob/main/LICENSE">
-    <img alt="License" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Ftest.pypi.org%2Fpypi%2Flangsfer%2Fjson&query=%24.info.license&logoColor=white&label=License&link=https%3A%2F%2Ftest.pypi.org%2Fproject%2Flangsfer%2F">
+    <img alt="PyPI - License" src="https://img.shields.io/pypi/l/langsfer?logoColor=white&label=License&color=blue">
+  </a>
+  <a href="https://pypi.org/project/langsfer">
+    <img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/langsfer?logo=python&label=Python">
   </a>
 </p>
 
