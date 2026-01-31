@@ -7,7 +7,7 @@ inputs:
   poetry_version:
     required: true
     type: string
-    default: '1.8.3'
+    default: '2.3.0'
   poetry_included_groups: 
     required: false
     type: string

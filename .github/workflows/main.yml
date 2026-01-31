@@ -20,6 +20,7 @@ env:
   GITHUB_BOT_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
   PY_COLORS: 1
   PYTHON_VERSION: '3.11'
+  POETRY_VERSION: '2.3.0'
   PACKAGE_NAME: 'langsfer'
 
 
@@ -39,6 +40,7 @@ jobs:
       uses: ./.github/actions/poetry
       with:
         python_version: ${{ env.PYTHON_VERSION }}
+        poetry_version: ${{ env.POETRY_VERSION }}
         poetry_included_groups: dev
 
     - name: Run pre-commit
