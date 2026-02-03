@@ -76,9 +76,9 @@ def test_focus_fuzzy_token_overlap(focus_fuzzy_token_overlap: dict):
     )
     for token in overlapping_tokens:
         assert token in target_tokenizer_vocab
-        assert (
-            token in focus_fuzzy_token_overlap["overlapping_tokens"]
-        ), overlapping_token_difference
+        assert token in focus_fuzzy_token_overlap["overlapping_tokens"], (
+            overlapping_token_difference
+        )
 
     for token in non_overlapping_tokens:
         assert token in target_tokenizer_vocab
